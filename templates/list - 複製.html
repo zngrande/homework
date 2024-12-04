@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>BidRecord</title>
+    <style>
+        .logout-button {
+            position: absolute; /* 使用絕對定位 */
+            top: 10px; /* 距離頂部 10px */
+            right: 10px; /* 距離右側 10px */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+    </style>
+</head>
+<body>
+    <a href="/loginPage" class="logout-button">登出</a> <!-- 新增的登出按鈕 -->
+    
+    <p>{{ product.name }} 的所有出價紀錄</p>
+    <hr />
+    
+    <table width="600" border="1">
+        <tr>
+            <td>出價者</td>
+            <td>價格</td>
+            <td>出價時間</td>
+        </tr>
+        {% for rec in data %}
+        <tr>
+            <td>{{ rec.Uname }}</td>
+            <td>{{ rec.now_price }}</td>
+            <td>{{ rec.bid_time }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/productlist">回到商品列表</a>
+</body>
+</html>
