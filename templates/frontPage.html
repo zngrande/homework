@@ -21,7 +21,7 @@
     <a href="/loginPage" class="logout-button">登出</a> <!-- 新增的登出按鈕 -->
     <p>首頁</p>
     <hr>
-    <p>您好，{{ Uname if Uname else "訪客" }}</p>  <!-- 顯示歡迎訊息和 Uid -->
+    <p>您好，{{ name if name else "訪客" }}</p>  <!-- 顯示歡迎訊息和 Uid -->
     <a href="/productlist">全部商品清單</a> <br>
     <a href="/ownproductlist">個人商品清單</a> <br>
 </body>
