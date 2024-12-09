@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>RestaurantList</title>
+    <style>
+        body {
+            position: relative; /* 相對定位，便於放置登出按鈕 */
+        }
+        .logout-button {
+        position: absolute; /* 使用絕對定位 */
+        top: -5px; /* 距離頂部 10px */
+        right: 0px; /* 距離右側 10px */
+        padding: 6px 12px; /* 按鈕內邊距 */
+        background-color: #007BFF; /* 按鈕顏色 */
+        color: white; /* 按鈕文字顏色 */
+        border: none; /* 去除邊框 */
+        border-radius: 4px; /* 圓角 */
+        text-decoration: none; /* 去除底線 */
+        cursor: pointer; /* 鼠標變成手形 */
+    }
+        .button {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            text-align: center; /* 文字置中 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+        }
+        .button.delete {
+            background-color: #dc3545; /* 刪除按鈕的顏色 */
+        }
+    </style>
+</head>
+<body>
+    <a href="/logout" class="button logout-button">登出</a> <!-- 登出按鈕 -->
+    
+    <p>餐廳清單</p>
+    <hr />
+    <table width="600" border="1">
+        <tr>
+            <td>餐廳名稱</td>
+            <td>餐廳地址</td>
+            <td>評分</td>
+        </tr>
+        {% for rec in data %}
+        <tr>
+            <td>{{ rec.name }}</td>
+            <td>{{ rec.content }}</td>
+            <td>{{ rec.starting_price }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="/frontPage">回到首頁</a>
+    <br>
+</body>
+</html>
