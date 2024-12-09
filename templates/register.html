@@ -5,20 +5,20 @@
     <title>Register</title>
     <script>
         function updateFields() {
-            const role = document.getElementById("role").value;
+            const identity = document.getElementById("identity").value;
             const gidField = document.getElementById("GidField");
             const ridField = document.getElementById("RidField");
             const didField = document.getElementById("DidField");
 
             // 顯示或隱藏欄位
-            gidField.style.display = role === "customer" ? "block" : "none";
-            ridField.style.display = role === "restaurant" ? "block" : "none";
-            didField.style.display = role === "delivery" ? "block" : "none";
+            gidField.style.display = identity === "customer" ? "block" : "none";
+            ridField.style.display = identity === "restaurant" ? "block" : "none";
+            didField.style.display = identity === "delivery" ? "block" : "none";
 
             // 確保未選中的欄位不會傳送值
-            document.getElementById("Gid").required = role === "customer";
-            document.getElementById("Rid").required = role === "restaurant";
-            document.getElementById("Did").required = role === "delivery";
+            document.getElementById("Gid").required = identity === "customer";
+            document.getElementById("Rid").required = identity === "restaurant";
+            document.getElementById("Did").required = identity === "delivery";
         }
     </script>
 </head>
@@ -27,7 +27,7 @@
     <hr />
     <form method="post" action="/register">
         <label>角色:</label>
-        <select id="role" name="role" onchange="updateFields()" required>
+        <select id="identity" name="identity" onchange="updateFields()" required>
             <option value="" selected disabled>請選擇角色</option>
             <option value="customer">客戶</option>
             <option value="restaurant">餐廳</option>
