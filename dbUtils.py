@@ -10,7 +10,7 @@ try:
 		password="",
 		host="localhost",
 		port=3306,
-		database="hw2"
+		database="food_pangolin"
 	)
 	#建立執行SQL指令用之cursor, 設定傳回dictionary型態的查詢結果 [{'欄位名':值, ...}, ...]
 	cursor=conn.cursor(dictionary=True)
@@ -19,6 +19,25 @@ except mysql.connector.Error as e: # mariadb.Error as e:
 	print("Error connecting to DB")
 	exit(1)
 
+#新增註冊者
+def add_user(id, pw, identity):
+    try:
+        sql = "INSERT INTO accounts1 (id, pw, identity) VALUES (%s, %s, %s);"
+        cursor.execute(sql, (id, pw, identity))
+        conn.commit()
+        print("用戶註冊成功")
+    except mysql.connector.Error as e:
+        print("註冊用戶時發生錯誤:", e)
+
+
+
+
+
+
+
+
+
+'''
 #新增商品
 def add(name, content, starting_price, Uid):
     try:
@@ -45,15 +64,7 @@ def delete(Pid):
     except mysql.connector.Error as e:
         print("刪除商品時發生錯誤:", e)
 
-#新增註冊者
-def add_user(Uid, Uname, pw):
-    try:
-        sql = "INSERT INTO accounts1 (Uid, Uname, pw) VALUES (%s, %s, %s);"
-        cursor.execute(sql, (Uid, Uname, pw))
-        conn.commit()
-        print("用戶註冊成功")
-    except mysql.connector.Error as e:
-        print("註冊用戶時發生錯誤:", e)
+
 
 #修改商品
 def update(Pid, name, content, starting_price):
@@ -126,5 +137,5 @@ def get_bid_records_by_pid(Pid):
     cursor.execute(sql, (Pid,))
     return cursor.fetchall()
 
-
+'''
 
