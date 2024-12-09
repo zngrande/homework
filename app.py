@@ -49,8 +49,6 @@ def login():
         if user['pw'] == pw:  # 確保這裡檢查的密碼邏輯正確
             session['loginID'] = id  # 可選
             session['id'] = id
-            session['name'] = user['name']  # 確保正確設置 Uname
-            print(f"用戶 {session['name']} 登錄成功")  # 調試輸出
             return redirect("/frontPage")
         else:
             print("密碼不正確")
@@ -95,3 +93,4 @@ def front_page2():
     id = session.get('id')  # 假設您將 Uid 存儲在 session 中
     name = session.get('name')  # 獲取用戶名稱
     return render_template('frontpage.html', name=name, id=id)
+

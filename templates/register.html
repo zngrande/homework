@@ -11,14 +11,14 @@
             const didField = document.getElementById("DidField");
 
             // 顯示或隱藏欄位
-            gidField.style.display = identity === "customer" ? "block" : "none";
-            ridField.style.display = identity === "restaurant" ? "block" : "none";
-            didField.style.display = identity === "delivery" ? "block" : "none";
+            gidField.style.display = identity === "客戶" ? "block" : "none";
+            ridField.style.display = identity === "餐廳" ? "block" : "none";
+            didField.style.display = identity === "外送員" ? "block" : "none";
 
             // 確保未選中的欄位不會傳送值
-            document.getElementById("Gid").required = identity === "customer";
-            document.getElementById("Rid").required = identity === "restaurant";
-            document.getElementById("Did").required = identity === "delivery";
+            document.getElementById("Gid").required = identity === "客戶";
+            document.getElementById("Rid").required = identity === "餐廳";
+            document.getElementById("Did").required = identity === "外送員";
         }
     </script>
 </head>
@@ -29,9 +29,9 @@
         <label>角色:</label>
         <select id="identity" name="identity" onchange="updateFields()" required>
             <option value="" selected disabled>請選擇角色</option>
-            <option value="customer">客戶</option>
-            <option value="restaurant">餐廳</option>
-            <option value="delivery">外送員</option>
+            <option value="客戶">客戶</option>
+            <option value="餐廳">餐廳</option>
+            <option value="外送員">外送員</option>
         </select>
         
         <br>
