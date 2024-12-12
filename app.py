@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user
+from dbUtils import get_user_by_id, add_user #, update, getGuestDetailsById
 
 
 # creates a Flask application, specify a static folder on /
@@ -93,4 +93,23 @@ def front_page2():
     id = session.get('id')  # 假設您將 Uid 存儲在 session 中
     name = session.get('name')  # 獲取用戶名稱
     return render_template('frontpage.html', name=name, id=id)
+'''
+# 修改資料 (客戶)
+@app.route("/guestinformation", methods=['GET', 'POST'])
+def guest_information():
+    if request.method == 'POST':
+        # 獲取表單數據
+        Gid = request.form.get('Gid')  # 隱藏欄位 Gid
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+
+        # 更新資料庫
+        update(Gid, name, phone, address)
+        return redirect(f"/guestinformation?Gid={Gid}")
+    
+    # 使用 GET 請求時，取得產品詳細資料
+    guest = getGuestDetailsById(Gid)
+    return render_template('guestinformation.html', data=guest)
+'''
 

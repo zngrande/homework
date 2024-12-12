@@ -9,7 +9,7 @@
     <hr />
     <form method="post" action="/guestinformation">
         <!-- 隱藏欄位，用於保存 Gid -->
-        <input type="hidden" name="Gid" value="{{ Gid }}" />
+        <input type="text" name="Gid" value="{{ Gid }}" />
 
         <label>客戶姓名:</label>
         <input name="name" type="text" value="{{ data.name }}" required /> <br>

@@ -35,6 +35,8 @@ def add_user(id, pw, identity):
             new_gid = (result['max_gid'] + 1) if result['max_gid'] is not None else 1
             sql = "INSERT INTO accounts (Gid, id, pw, identity) VALUES (%s, %s, %s,'客戶');"
             cursor.execute(sql, (new_gid, id, pw))
+            sql = "INSERT INTO guest (Gid) VALUES (%s);"
+            cursor.execute(sql,(new_gid))
 
         elif identity == "餐廳":
             # 取得最大 Rid 並加 1 為新使用者分配 Rid
@@ -119,4 +121,21 @@ def get_user_by_id(id, identity):
     except Exception as e:
         print(f"查詢用戶時發生錯誤: {e}")
         return None
-    
+'''
+ # 修改客戶資料
+def update(Gid, name, phone, address):
+    sql = "UPDATE guest SET name = %s, phone = %s, address = %s WHERE Gid = %s;"
+    params = (name, phone, address, Gid)
+    try:
+        cursor.execute(sql, params)
+        conn.commit()
+        print(f"客戶資料更新成功，Gid={Gid}")
+    except mysql.connector.Error as err:
+        print(f"更新客戶資料時出錯: {err}")
+
+#拿到客戶資料
+def getGuestDetailsById(Gid):
+    sql = "SELECT * FROM guest WHERE Gid = %s;"
+    cursor.execute(sql, (Gid,))
+    return cursor.fetchone()
+''' 

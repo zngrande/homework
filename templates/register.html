@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -6,26 +7,40 @@
     <script>
         function updateFields() {
             const identity = document.getElementById("identity").value;
-            const gidField = document.getElementById("GidField");
-            const ridField = document.getElementById("RidField");
-            const didField = document.getElementById("DidField");
-
-            // 顯示或隱藏欄位
-            gidField.style.display = identity === "客戶" ? "block" : "none";
-            ridField.style.display = identity === "餐廳" ? "block" : "none";
-            didField.style.display = identity === "外送員" ? "block" : "none";
-
-            // 確保未選中的欄位不會傳送值
+            
+            // 根據選擇的角色顯示或隱藏欄位
+            document.getElementById("GidField").style.display = identity === "客戶" ? "block" : "none";
+            document.getElementById("RidField").style.display = identity === "餐廳" ? "block" : "none";
+            document.getElementById("DidField").style.display = identity === "外送員" ? "block" : "none";
+            
+            // 設定欄位的必填屬性
             document.getElementById("Gid").required = identity === "客戶";
             document.getElementById("Rid").required = identity === "餐廳";
             document.getElementById("Did").required = identity === "外送員";
+        }
+
+        function redirectBasedOnRole(event) {
+            const form = document.getElementById("registerForm");
+            const identity = document.getElementById("identity").value;
+
+            // 根據角色設定不同的 action
+            if (identity === "客戶") {
+                form.action = "/guestinformation";
+            } else if (identity === "餐廳") {
+                form.action = "/restaurantinformation";
+            } else if (identity === "外送員") {
+                form.action = "/deliveryinformation";
+            } else {
+                alert("請選擇角色！");
+                event.preventDefault(); // 阻止表單提交
+            }
         }
     </script>
 </head>
 <body>
     <p>註冊</p>
     <hr />
-    <form method="post" action="/register">
+    <form id="registerForm" method="post" action="/register" onsubmit="redirectBasedOnRole(event)">
         <label>角色:</label>
         <select id="identity" name="identity" onchange="updateFields()" required>
             <option value="" selected disabled>請選擇角色</option>
