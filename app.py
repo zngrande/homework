@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user, get_all_restaurants
+from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_Rid, getdishDetailsById
 
 
 # creates a Flask application, specify a static folder on /
@@ -97,3 +97,10 @@ def front_page2():
 def restaurant_list():
     data = get_all_restaurants()
     return render_template('restaurantlist.html',data=data)
+
+@app.route("/restaurantdishlist/<int:Rid>")
+def dish_records(Rid):
+    dish_records = get_dish_list_by_Rid(Rid)
+    restaurant = getdishDetailsById(Rid)  # 獲取商品詳細信息
+    restaurant = restaurant['name']  # 取得商品名稱
+    return render_template('restaurantdishlist.html', data=dish_records, restaurant=restaurant)

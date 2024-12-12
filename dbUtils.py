@@ -113,3 +113,19 @@ def get_all_restaurants():
     cursor.execute(sql)
     return cursor.fetchall()
 
+#餐廳菜單
+def get_dish_list_by_Rid(Rid):
+    sql = """
+    SELECT restaurant.name, dish.dish_name, dish.price, dish.content
+    FROM restaurant
+    JOIN dish ON restaurant.name = dish.restaurant_name
+    WHERE restaurant.Rid = %s;
+    """
+    cursor.execute(sql, (Rid,))
+    return cursor.fetchall()
+
+#拿到餐點資訊
+def getdishDetailsById(Rid):
+    sql = "SELECT * FROM restaurant WHERE Rid = %s;"
+    cursor.execute(sql, (Rid,))
+    return cursor.fetchone()
