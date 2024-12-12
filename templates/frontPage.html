@@ -1,12 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
+<html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>FrontPage</title>
-<style>
-    .logout-button {
+    <meta charset="utf-8">
+    <title>首頁</title>
+    <style>
+        body {
+            position: relative; /* 相對定位，便於放置登出按鈕 */
+        }
+        .logout-button {
         position: absolute; /* 使用絕對定位 */
-        top: 10px; /* 距離頂部 10px */
-        right: 10px; /* 距離右側 10px */
+        top: -5px; /* 距離頂部 10px */
+        right: 0px; /* 距離右側 10px */
         padding: 6px 12px; /* 按鈕內邊距 */
         background-color: #007BFF; /* 按鈕顏色 */
         color: white; /* 按鈕文字顏色 */
@@ -15,14 +19,39 @@
         text-decoration: none; /* 去除底線 */
         cursor: pointer; /* 鼠標變成手形 */
     }
-</style>
+        .button {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            text-align: center; /* 文字置中 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+        }
+        .button.delete {
+            background-color: #dc3545; /* 刪除按鈕的顏色 */
+        }
+    </style>
 </head>
 <body>
-    <a href="/loginPage" class="logout-button">登出</a> <!-- 新增的登出按鈕 -->
+    <a href="/logout" class="button logout-button">登出</a> <!-- 登出按鈕 -->
+    
     <p>首頁</p>
-    <hr>
-    <p>您好，{{ name if name else "訪客" }}</p>  <!-- 顯示歡迎訊息和 Uid -->
-    <a href="/productlist">全部商品清單</a> <br>
-    <a href="/ownproductlist">個人商品清單</a> <br>
+    <hr />
+    <table width="600" border="1">
+        <tr>
+            <td>餐廳名稱</td>
+            <td>餐廳地址</td>
+            <td>評分</td>
+        </tr>
+        {% for rec in data %}
+        <tr>
+            <td>{{ rec.name }}</td>
+            <td>{{ rec.address }}</td>
+            <td>{{ rec.point }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
 </body>
 </html>

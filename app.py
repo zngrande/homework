@@ -86,17 +86,19 @@ def register():
     return render_template('register.html')
 
 #首頁(可以偵測到註冊時的姓名)
+'''
 @app.route("/frontPage")
 def front_page2():
     id = session.get('id')  # 假設您將 Uid 存儲在 session 中
     name = session.get('name')  # 獲取用戶名稱
     return render_template('frontpage.html', name=name, id=id)
-
+'''
+    
 #客人看餐廳 渲染
-@app.route("/restaurantlist")
+@app.route("/frontPage")
 def restaurant_list():
     data = get_all_restaurants()
-    return render_template('restaurantlist.html',data=data)
+    return render_template('frontPage.html',data=data)
 
 @app.route("/restaurantdishlist/<int:Rid>")
 def dish_records(Rid):
