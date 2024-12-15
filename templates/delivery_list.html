@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待送清單</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>待送清單</h1>
+    <div id="order-list">
+        <!-- 待送訂單將在此顯示 -->
+    </div>
+    <script>
+        // 加載待送清單
+        function loadOrders() {
+            $.get('/delivery/pending_orders', function(data) {
+                let html = '';
+                data.forEach(order => {
+                    if (order.status === 'accepted') {
+                        html += `
+                            <div>
+                                <p>訂單編號：${order.Oid}</p>
+                                <button onclick="pickUpOrder(${order.Oid})">取貨</button>
+                            </div>
+                        `;
+                    } else if (order.status === 'picked_up') {
+                        html += `
+                            <div>
+                                <p>訂單編號：${order.Oid}</p>
+                                <form onsubmit="completeOrder(event, ${order.Oid})">
+                                    <input type="file" name="attachment" required>
+                                    <button type="submit">送達</button>
+                                </form>
+                            </div>
+                        `;
+                    }
+                });
+                $('#order-list').html(html);
+            });
+        }
+
+        // 取貨功能
+        function pickUpOrder(orderId) {
+            $.ajax({
+                url: '/delivery/pickup',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Oid: orderId }),
+                success: function(response) {
+                    alert(response.message);
+                    loadOrders();
+                },
+                error: function(response) {
+                    alert('取貨失敗：' + response.responseJSON.message);
+                }
+            });
+        }
+
+        // 送達功能
+        function completeOrder(event, orderId) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            formData.append('Oid', orderId);
+
+            $.ajax({
+                url: '/delivery/complete',
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function(response) {
+                    alert(response.message);
+                    loadOrders();
+                },
+                error: function(response) {
+                    alert('送達失敗：' + response.responseJSON.message);
+                }
+            });
+        }
+
+        $(document).ready(loadOrders);
+    </script>
+</body>
+</html>

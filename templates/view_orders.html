@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看可接訂單</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>查看可接訂單</h1>
+    <div id="order-list">
+        <!-- 訂單清單將在此顯示 -->
+    </div>
+    <script>
+        // 加載訂單
+        function loadOrders() {
+            $.get('/delivery/orders', function(data) {
+                let html = '';
+                data.forEach(order => {
+                    html += `
+                        <div>
+                            <p>訂單編號：${order.Oid}</p>
+                            <button onclick="acceptOrder(${order.Oid})">接單</button>
+                        </div>
+                    `;
+                });
+                $('#order-list').html(html);
+            });
+        }
+
+        // 接單功能
+        function acceptOrder(orderId) {
+            $.ajax({
+                url: '/delivery/accept',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ Oid: orderId }),
+                success: function(response) {
+                    alert(response.message);
+                    loadOrders();
+                },
+                error: function(response) {
+                    alert('接單失敗：' + response.responseJSON.message);
+                }
+            });
+        }
+
+        $(document).ready(loadOrders);
+    </script>
+</body>
+</html>
