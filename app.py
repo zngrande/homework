@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_Rid, getdishDetailsById
-
+from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, add_to_cart
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static',static_url_path='/')
@@ -100,9 +99,27 @@ def restaurant_list():
     data = get_all_restaurants()
     return render_template('frontPage.html',data=data)
 
-@app.route("/restaurantdishlist/<int:Rid>")
-def dish_records(Rid):
-    dish_records = get_dish_list_by_Rid(Rid)
-    restaurant = getdishDetailsById(Rid)  # 獲取商品詳細信息
-    restaurant = restaurant['name']  # 取得商品名稱
-    return render_template('restaurantdishlist.html', data=dish_records, restaurant=restaurant)
+@app.route("/restaurantdishlist/<string:name>")
+def dish_records(name):
+    # 根據餐廳名稱查詢對應的餐廳和菜單記錄
+    dish_records = get_dish_list_by_name(name)
+    restaurant = get_restaurant_details_by_name(name)  # 獲取餐廳詳細信息
+    if restaurant:
+        restaurant_name = restaurant['name']  # 確保名稱存在
+    else:
+        return "餐廳不存在", 404  # 如果餐廳不存在返回 404
+    return render_template('restaurantdishlist.html', data=dish_records, restaurant=restaurant_name)
+   
+@app.route("/cart", methods=['GET', 'POST'])
+@login_required  # 確保用戶已登入
+def cart():
+    if request.method == 'POST':
+        dish_name = request.form['dish_name']
+        price = request.form['price']
+        restaurant_name = request.form['restaurant_name']
+        add_to_cart(dish_name, price, restaurant_name) 
+        return redirect('/cart')  # 跳轉到購物車頁面
+
+    # 方案 2：如果是 GET 請求，顯示購物車內容
+    cart_items = session.get('cart', [])
+    return render_template('cart.html', cart_items=cart_items)

@@ -5,20 +5,25 @@
     <title>{{ restaurant }}的菜單</title>
     <style>
         body {
-            position: relative; /* 相對定位，便於放置登出按鈕 */
+            position: relative; /* 相對定位，便於放置按鈕 */
+        }
+        .logout-button, .cart-button {
+            position: absolute; /* 使用絕對定位 */
+            top: -5px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
         }
         .logout-button {
-        position: absolute; /* 使用絕對定位 */
-        top: -5px; /* 距離頂部 10px */
-        right: 0px; /* 距離右側 10px */
-        padding: 6px 12px; /* 按鈕內邊距 */
-        background-color: #007BFF; /* 按鈕顏色 */
-        color: white; /* 按鈕文字顏色 */
-        border: none; /* 去除邊框 */
-        border-radius: 4px; /* 圓角 */
-        text-decoration: none; /* 去除底線 */
-        cursor: pointer; /* 鼠標變成手形 */
-    }
+            right: 0px; /* 靠右 */
+        }
+        .cart-button {
+            right: 80px; /* 靠右，位於登出按鈕左側 */
+        }
         .button {
             display: inline-block;
             padding: 6px 14px;
@@ -28,31 +33,40 @@
             border-radius: 4px; /* 圓角 */
             text-decoration: none; /* 去除底線 */
         }
-        .button.delete {
-            background-color: #dc3545; /* 刪除按鈕的顏色 */
+        .button.add-to-cart {
+            background-color: #28a745; /* 綠色背景 */
         }
     </style>
 </head>
 <body>
-    <a href="/logout" class="button logout-button">登出</a> <!-- 登出按鈕 -->
-    
+    <a href="/cart" class="button cart-button">購物車</a> <!-- 購物車按鈕 -->
+    <a href="/logout" class="button logout-button">登出</a>
     <p>{{ restaurant }}的菜單</p>
     <hr />
     <table width="600" border="1">
         <tr>
-            <td>名稱</td>
+            <td>餐點名稱</td>
             <td>價錢</td>
             <td>簡介</td>
+            <td>操作</td>
         </tr>
         {% for rec in data %}
         <tr>
             <td>{{ rec.dish_name }}</td>
             <td>{{ rec.price }}</td>
             <td>{{ rec.content }}</td>
+            <td>
+                <!-- 使用表單提交 -->
+                <form action="/restaurantdishlist/{{ rec.name }}" method="POST">
+                    <input type="hidden" name="dish_name" value="{{ rec.dish_name }}">
+                    <input type="hidden" name="price" value="{{ rec.price }}">
+                    <input type="hidden" name="restaurant_name" value="{{ restaurant }}">
+                    <button type="submit" class="button add-to-cart">加入購物車</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
-
     <a href="/frontPage">回到首頁</a>
     <br>
 </body>

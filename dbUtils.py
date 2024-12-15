@@ -114,18 +114,32 @@ def get_all_restaurants():
     return cursor.fetchall()
 
 #餐廳菜單
-def get_dish_list_by_Rid(Rid):
+def get_dish_list_by_name(name):
     sql = """
     SELECT restaurant.name, dish.dish_name, dish.price, dish.content
     FROM restaurant
     JOIN dish ON restaurant.name = dish.restaurant_name
-    WHERE restaurant.Rid = %s;
+    WHERE restaurant.name = %s;
     """
-    cursor.execute(sql, (Rid,))
+    cursor.execute(sql, (name,))
     return cursor.fetchall()
 
+
 #拿到餐點資訊
-def getdishDetailsById(Rid):
-    sql = "SELECT * FROM restaurant WHERE Rid = %s;"
-    cursor.execute(sql, (Rid,))
+def get_restaurant_details_by_name(name):
+    sql = "SELECT * FROM restaurant WHERE name = %s;"
+    cursor.execute(sql, (name,))
     return cursor.fetchone()
+
+#新增進購物車
+def add_to_cart(dish_name, price, restaurant_name):
+    try:
+        sql = "INSERT INTO cart (dish_name, price, restaurant_name) VALUES (%s, %s, %s);"
+        param = (dish_name, price, restaurant_name)
+        cursor.execute(sql, param)
+        conn.commit()
+        print("餐點已成功新增")
+    except mysql.connector.Error as e:
+         print("新增餐點時發生錯誤:", e)
+
+
