@@ -125,17 +125,23 @@ def get_dish_list_by_name(name):
     return cursor.fetchall()
 
 
-#拿到餐點資訊
+#拿到餐聽資訊
 def get_restaurant_details_by_name(name):
     sql = "SELECT * FROM restaurant WHERE name = %s;"
     cursor.execute(sql, (name,))
     return cursor.fetchone()
 
+#拿到餐點資訊
+def get_dish_details_by_dish_name(dish_name):
+    sql = "SELECT * FROM dish WHERE dish_name = %s;"
+    cursor.execute(sql, (dish_name,))
+    return cursor.fetchone()
+
 #新增進購物車
-def add_to_cart(dish_name, price, restaurant_name, how_many):
+def add_to_cart(dish_name, price, restaurant_name, quantity):
     try:
-        sql = "INSERT INTO cart (dish_name, price, restaurant_name, how_many) VALUES (%s, %s, %s, %s);"
-        param = (dish_name, price, restaurant_name, how_many)
+        sql = "INSERT INTO guest_cart (dish_name, price, restaurant_name, quantity) VALUES (%s, %s, %s, %s);"
+        param = (dish_name, price, restaurant_name, quantity)
         cursor.execute(sql, param)
         conn.commit()
         print("餐點已成功新增")

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, add_to_cart
+from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static',static_url_path='/')
@@ -109,37 +109,31 @@ def dish_records(name):
     else:
         return "餐廳不存在", 404  # 如果餐廳不存在返回 404
     return render_template('restaurantdishlist.html', data=dish_records, restaurant=restaurant_name)
-   
-# 設置餐點數量
-@app.route('/placedish', methods=['POST'])
-@login_required
-def place_dish():
-    # 從表單中取得數據
-    dish_name = request.form['dish_name']
-    price = request.form['price']
-    restaurant_name = request.form['restaurant_name']
-    how_many = request.form['how_many']  # 取得數量
 
-    # 確保 how_many 轉換為整數
+
+@app.route('/place_dishes', methods=['POST'])
+def place_dishes():
+    dish_name = request.form.get('dish_name')
+    quantity = request.form.get('quantity')  # 使用 get() 防止 KeyError
+
+    if not dish_name or not quantity:
+        return "未提供餐點名稱或數量", 400  # 這裡會返回具體的錯誤訊息
+
     try:
-        how_many = int(how_many)
+        quantity = int(quantity)
+        if quantity <= 0:
+            return "數量必須大於 0", 400
     except ValueError:
-        return "Invalid how_many.", 400  # 返回 400 錯誤，如果轉換失敗
+        return "數量必須為整數", 400
 
-    # 檢查 dish_name 是否存在
-    if not dish_name:
-        return "dish_name is missing.", 400  # 如果缺少餐點名稱，返回 400 錯誤
+    dish = get_dish_details_by_dish_name(dish_name)
+    if not dish:
+        return f"未找到餐點資料，餐點名稱: {dish_name}", 404
 
-    # 這裡可以加入存入資料庫或其他邏輯處理
-    # 假設將這些資訊存入購物車的表單或相關資料庫表
+    add_to_cart(dish['dish_name'], dish['price'], dish['restaurant_name'], quantity)
+    return redirect(f"/restaurantdishlist/{dish['restaurant_name']}")
 
-    # 這是虛擬的庫存處理，可以根據實際需求調整
-    restaurant = get_restaurant_details_by_name(restaurant_name)
 
-    # 這裡進行資料庫插入，或者在 session 中存儲購物車
-    # 假設有一個 function 來添加到購物車
-    add_to_cart(dish_name, price, how_many, restaurant_name)
 
-    # 重定向到購物車頁面
-    return redirect(f"/restaurantdishlist/{restaurant_name}")
+
 

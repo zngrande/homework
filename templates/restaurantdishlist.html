@@ -43,31 +43,29 @@
     <a href="/logout" class="button logout-button">登出</a>
     <p>{{ restaurant }}的菜單</p>
     <hr />
-    <table width="600" border="1">
-        <tr>
-            <td>餐點名稱</td>
-            <td>價錢</td>
-            <td>簡介</td>
-            <td>操作</td>
-        </tr>
-        {% for rec in data %}
-        <tr>
-            <td>{{ rec.dish_name }}</td>
-            <td>{{ rec.price }}</td>
-            <td>{{ rec.content }}</td>
-            <td>
-                <!-- 數量輸入框和加入購物車表單 -->
-                <form method="post" action="/placedish" style="display: inline;">
-                    <input type="hidden" name="dish_name" value="{{ rec.dish_name }}">
-                    <input type="hidden" name="price" value="{{ rec.price }}">
-                    <input type="hidden" name="restaurant_name" value="{{ restaurant }}">
-                    <input type="number" name="how_many" placeholder="數量" required min="0" value="0">
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    <button type="submit" >加入所有選擇的餐點</button>
+        <table width="600" border="1">
+            <tr>
+                <td>餐點名稱</td>
+                <td>價錢</td>
+                <td>簡介</td>
+                <td>數量</td>
+            </tr>
+            {% for rec in data %}
+            <tr>
+                <td>{{ rec.dish_name }}</td>
+                <td>{{ rec.price }}</td>
+                <td>{{ rec.content }}</td>
+                <td>
+                    <form method="post" action="/place_dishes">
+                        <input type="hidden" name="restaurant_name" value="{{ rec.restaurant_name }}">
+                        <input type="hidden" name="dish_name" value="{{ rec.dish_name }}">
+                        <input type="number" name="quantity" value="0" min="0" />
+                        <button type="submit">加入所有選擇的餐點</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>   
     <a href="/frontPage">回到首頁</a>
     <br>
 </body>
