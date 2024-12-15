@@ -110,16 +110,36 @@ def dish_records(name):
         return "餐廳不存在", 404  # 如果餐廳不存在返回 404
     return render_template('restaurantdishlist.html', data=dish_records, restaurant=restaurant_name)
    
-@app.route("/cart", methods=['GET', 'POST'])
-@login_required  # 確保用戶已登入
-def cart():
-    if request.method == 'POST':
-        dish_name = request.form['dish_name']
-        price = request.form['price']
-        restaurant_name = request.form['restaurant_name']
-        add_to_cart(dish_name, price, restaurant_name) 
-        return redirect('/cart')  # 跳轉到購物車頁面
+# 設置餐點數量
+@app.route('/placedish', methods=['POST'])
+@login_required
+def place_dish():
+    # 從表單中取得數據
+    dish_name = request.form['dish_name']
+    price = request.form['price']
+    restaurant_name = request.form['restaurant_name']
+    how_many = request.form['how_many']  # 取得數量
 
-    # 方案 2：如果是 GET 請求，顯示購物車內容
-    cart_items = session.get('cart', [])
-    return render_template('cart.html', cart_items=cart_items)
+    # 確保 how_many 轉換為整數
+    try:
+        how_many = int(how_many)
+    except ValueError:
+        return "Invalid how_many.", 400  # 返回 400 錯誤，如果轉換失敗
+
+    # 檢查 dish_name 是否存在
+    if not dish_name:
+        return "dish_name is missing.", 400  # 如果缺少餐點名稱，返回 400 錯誤
+
+    # 這裡可以加入存入資料庫或其他邏輯處理
+    # 假設將這些資訊存入購物車的表單或相關資料庫表
+
+    # 這是虛擬的庫存處理，可以根據實際需求調整
+    restaurant = get_restaurant_details_by_name(restaurant_name)
+
+    # 這裡進行資料庫插入，或者在 session 中存儲購物車
+    # 假設有一個 function 來添加到購物車
+    add_to_cart(dish_name, price, how_many, restaurant_name)
+
+    # 重定向到購物車頁面
+    return redirect(f"/restaurantdishlist/{restaurant_name}")
+
