@@ -137,22 +137,64 @@ def get_dish_details_by_dish_name(dish_name):
     cursor.execute(sql, (dish_name,))
     return cursor.fetchone()
 
-#新增進購物車
+# 新增或更新購物車
 def add_to_cart(dish_name, price, restaurant_name, quantity):
     try:
-        sql = "INSERT INTO guest_cart (dish_name, price, restaurant_name, quantity) VALUES (%s, %s, %s, %s);"
-        param = (dish_name, price, restaurant_name, quantity)
-        cursor.execute(sql, param)
+        # 如果數量為0，刪除該菜品
+        if quantity == 0:
+            sql_delete = """
+                DELETE FROM guest_cart
+                WHERE dish_name = %s AND restaurant_name = %s;
+            """
+            cursor.execute(sql_delete, (dish_name, restaurant_name))
+            conn.commit()
+            print(f"已刪除 {dish_name} 的購物車項目")
+        else:
+            # 檢查購物車中是否已經有該菜品
+            sql_check = """
+                SELECT * FROM guest_cart
+                WHERE dish_name = %s AND restaurant_name = %s;
+            """
+            cursor.execute(sql_check, (dish_name, restaurant_name))
+            existing_item = cursor.fetchone()
+
+            if existing_item:
+                # 如果已經有該菜品，更新數量
+                sql_update = """
+                    UPDATE guest_cart
+                    SET quantity = %s
+                    WHERE dish_name = %s AND restaurant_name = %s;
+                """
+                cursor.execute(sql_update, (quantity, dish_name, restaurant_name))
+                print(f"已更新 {dish_name} 的數量為 {quantity}")
+            else:
+                # 如果購物車中沒有該菜品，新增該菜品
+                sql_insert = """
+                    INSERT INTO guest_cart (dish_name, price, restaurant_name, quantity)
+                    VALUES (%s, %s, %s, %s);
+                """
+                cursor.execute(sql_insert, (dish_name, price, restaurant_name, quantity))
+                print(f"已將 {dish_name} 新增到購物車")
+
+        # 提交變更
         conn.commit()
-        print("餐點已成功新增")
     except mysql.connector.Error as e:
-         print("新增餐點時發生錯誤:", e)
+        print("處理購物車時發生錯誤:", e)
+
+#刪除購物車內容
+def delete_from_cart(dish_name):
+    try:
+        sql = "DELETE FROM guest_cart WHERE dish_name = %s;"
+        cursor.execute(sql, (dish_name,))
+        conn.commit()
+        print(f"已從購物車中刪除餐點: {dish_name}")
+    except mysql.connector.Error as e:
+        print("刪除餐點時發生錯誤:", e)
+
 
 #拿到購物車資訊
-def get_cart_detail_by_restaurant_name():
-    sql = """
-        SELECT * FROM guest_cart;
-        """
+def get_cart_detail():
+    sql = "SELECT * FROM guest_cart;"
     cursor.execute(sql)
     return cursor.fetchall()
 

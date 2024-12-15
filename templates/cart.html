@@ -31,11 +31,16 @@
         </tr>
         {% for rec in data %}
         <tr>
-            <td>{{ rec.dish_name}}</td>
-            <td>{{ rec.quantity}}</td>
+            <td>{{ rec.dish_name }}</td>
+            <td>{{ rec.quantity }}</td>
             <td>{{ rec.price }}</td>
         </tr>
         {% endfor %}
+        <!-- 新增顯示總金額的部分 -->
+        <tr>
+            <td colspan="2" style="text-align: right;"><strong>總金額：</strong></td>
+            <td><strong>{{ total_price }}</strong></td>
+        </tr>
     </table>
     <a href="/frontPage">回到首頁</a>
 </body>
