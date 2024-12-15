@@ -63,27 +63,34 @@ def login():
 @app.route('/logout')
 @login_required  # 確保用戶已登入
 def logout():
-    session.pop('id', None)  # 清除 Uid
+    session.pop('id', None)  # 清除 id
     session.pop('loginID', None)  # 可選：如果您也使用 loginID，清除它
     return redirect('/loginPage')  # 重定向到登入頁面
 
-#註冊
+# 註冊
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         form = request.form
-        id = form['id']  # ID of the user
-        pw = form['pw']  # Password of the user
-        role = form['role']  # Role selected by the user (customer, restaurant, or delivery)
-    
+        id = form['id'] 
+        pw = form['pw']
+        name = form['name']
+        phone = form['phone']
+        role = form['role']  # 取得角色
+        # 根據角色決定是否需要地址
+        address = form['address'] if role in ['customer', 'restaurant'] else None
+        
         # 呼叫函數將用戶資料新增到資料庫
-        add_user(id, pw, role)
+        add_user(id, pw, role, name, phone, address)
 
         # 註冊成功後重定向到登入頁面
         return redirect('/loginPage')
 
     # 使用 GET 方法時，返回註冊頁面
     return render_template('register.html')
+
+
+
 
 #首頁(可以偵測到註冊時的姓名)
 '''

@@ -20,39 +20,31 @@ except mysql.connector.Error as e: # mariadb.Error as e:
 
 
 # 新增註冊者
-def add_user(id, pw, role):
-    """
-    根據使用者角色將其新增到相應的資料表中。
-    若角色為 '客戶'，則分配下一個可用的 Gid。
-    若角色為 '餐廳'，則分配下一個可用的 Rid。
-    若角色為 '外送員'，則分配下一個可用的 Did。
-    """
+def add_user(id, pw, role, name, phone, address):
     try:
-        if role == "客戶":
+        if role == "customer":
             # 取得最大 Gid 並加 1 為新使用者分配 Gid
             cursor.execute("SELECT MAX(Gid) AS max_gid FROM guest;")
             result = cursor.fetchone()
             new_gid = (result['max_gid'] + 1) if result['max_gid'] is not None else 1
-            sql = "INSERT INTO accounts (Gid, id, pw, identity) VALUES (%s, %s, %s,'客戶');"
-            cursor.execute(sql, (new_gid, id, pw))
+            sql = "INSERT INTO guest (Gid, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_gid, id, pw, name, phone, address))
 
-        elif role == "餐廳":
+        elif role == "restaurant":
             # 取得最大 Rid 並加 1 為新使用者分配 Rid
             cursor.execute("SELECT MAX(Rid) AS max_rid FROM restaurant;")
             result = cursor.fetchone()
-            print("最大 Rid:", result)  # 輸出查詢結果
             new_rid = (result['max_rid'] + 1) if result['max_rid'] is not None else 1
-            sql = "INSERT INTO accounts (Rid, id, pw, identity) VALUES (%s, %s, %s,'餐廳');"
-            cursor.execute(sql, (new_rid, id, pw))
+            sql = "INSERT INTO restaurant (Rid, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_rid, id, pw, name, phone, address))
 
-        elif role == "外送員":
+        elif role == "delivery":
             # 取得最大 Did 並加 1 為新使用者分配 Did
             cursor.execute("SELECT MAX(Did) AS max_did FROM delivery_man;")
             result = cursor.fetchone()
-            print("最大 Did:", result)  # 輸出查詢結果
             new_did = (result['max_did'] + 1) if result['max_did'] is not None else 1
-            sql = "INSERT INTO accounts (Did, Uid, pw, identity) VALUES (%s, %s, %s, '外送員');"
-            cursor.execute(sql, (new_did, id, pw))
+            sql = "INSERT INTO delivery_man (Did, id, pw, name, phone) VALUES (%s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_did, id, pw, name, phone))
 
         else:
             print("無效的角色")
@@ -80,18 +72,12 @@ if __name__ == "__main__":
 
 # 拿到用戶ID，根據角色從對應表查詢
 def get_user_by_id(id, role):
-    """
-    根據用戶 ID 和角色類型獲取用戶資訊
-    :param xid: 用戶的 ID（Uid, Rid, Did）
-    :param role: 用戶的角色（customer, restaurant, delivery）
-    :return: 查詢結果（字典型態），如果找不到則返回 None
-    """
     try:
-        if role == "客戶":
+        if role == "customer":
             sql = "SELECT * FROM guest WHERE id = %s;"
-        elif role == "餐廳":
+        elif role == "restaurant":
             sql = "SELECT * FROM restaurant WHERE id = %s;"
-        elif role == "外送員":
+        elif role == "delivery":
             sql = "SELECT * FROM delivery_man WHERE id = %s;"
         else:
             print("角色無效")

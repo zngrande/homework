@@ -6,19 +6,10 @@
     <script>
         function updateFields() {
             const role = document.getElementById("role").value;
-            const gidField = document.getElementById("GidField");
-            const ridField = document.getElementById("RidField");
-            const didField = document.getElementById("DidField");
+            const addressField = document.getElementById("addressField");
 
-            // 顯示或隱藏欄位
-            gidField.style.display = role === "customer" ? "block" : "none";
-            ridField.style.display = role === "restaurant" ? "block" : "none";
-            didField.style.display = role === "delivery" ? "block" : "none";
-
-            // 確保未選中的欄位不會傳送值
-            document.getElementById("Gid").required = role === "customer";
-            document.getElementById("Rid").required = role === "restaurant";
-            document.getElementById("Did").required = role === "delivery";
+            // 根據角色顯示或隱藏欄位
+            addressField.style.display = (role === "customer" || role === "restaurant") ? "block" : "none";
         }
     </script>
 </head>
@@ -40,7 +31,19 @@
         <input name="id" type="text" required /> <br>
 
         <label>密碼:</label>
-        <input name="pw" type="password" required /> <br><br>
+        <input name="pw" type="password" required /> <br>
+
+        <label>姓名:</label>
+        <input name="name" type="text" required /> <br>
+
+        <label>電話:</label>
+        <input name="phone" type="text" required /> <br>
+
+        <!-- 僅客戶和餐廳需要提供地址 -->
+        <div id="addressField" style="display:none;">
+            <label>地址:</label>
+            <input name="address" type="text" required /> <br>
+        </div>
 
         <button type="submit" onclick="return confirm('註冊成功')">確認</button>
     </form>
