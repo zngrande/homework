@@ -87,12 +87,12 @@ def get_user_by_id(id, role):
     :return: 查詢結果（字典型態），如果找不到則返回 None
     """
     try:
-        if role == "customer":
-            sql = "SELECT * FROM customers WHERE Uid = %s;"
-        elif role == "restaurant":
-            sql = "SELECT * FROM restaurants WHERE Rid = %s;"
-        elif role == "delivery":
-            sql = "SELECT * FROM delivery WHERE Did = %s;"
+        if role == "客戶":
+            sql = "SELECT * FROM guest WHERE id = %s;"
+        elif role == "餐廳":
+            sql = "SELECT * FROM restaurant WHERE id = %s;"
+        elif role == "外送員":
+            sql = "SELECT * FROM delivery_man WHERE id = %s;"
         else:
             print("角色無效")
             return None
@@ -198,4 +198,39 @@ def get_cart_detail():
     cursor.execute(sql)
     return cursor.fetchall()
 
+def send_dish(Gid):
+    # 查詢購物車中的資料
+    sql_select = """
+    SELECT guest_cart.restaurant_name, guest_cart.dish_name, guest_cart.price, guest_cart.quantity, 
+           guest_cart.Gid, restaurant.Rid
+    FROM guest_cart
+    JOIN restaurant ON restaurant.name = guest_cart.restaurant_name
+    WHERE guest_cart.Gid = %s;
+    """
+    
+    # 插入到 prepare_dish 表的語句
+    sql_insert = """
+    INSERT INTO prepare_dish (Rid, dish_name, quantity, Gid)
+    VALUES (%s, %s, %s, %s)
+    """
+    
+    # 取得資料
+    cursor.execute(sql_select, (Gid,))
+    cart_data = cursor.fetchall()
+
+    # 插入資料到 prepare_dish
+    for item in cart_data:
+        Rid = item['Rid']
+        dish_name = item['dish_name']
+        quantity = item['quantity']
+        Gid = item['Gid']
+        cursor.execute(sql_insert, (Rid, dish_name, quantity, Gid))
+
+    # 清空該使用者的購物車資料
+    sql_delete = "DELETE FROM guest_cart WHERE Gid = %s;"
+    cursor.execute(sql_delete, (Gid,))
+
+    return cursor.fetchall()
+
+ 
 

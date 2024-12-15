@@ -35,21 +35,21 @@ def useParam(name,id):
 def login_page():
     return render_template('loginPage.html')
 
-#登入
 @app.route('/login', methods=['POST'])
 def login():
     form = request.form
     id = form['id']
     pw = form['pw']
+    role = form['role']  # 獲取角色類型
 
-    user = get_user_by_id(id)
+    user = get_user_by_id(id, role)  # 傳入角色參數
 
     if user:
-        if user['pw'] == pw:  # 確保這裡檢查的密碼邏輯正確
-            session['loginID'] = id  # 可選
+        if user['pw'] == pw:
+            session['loginID'] = id
             session['id'] = id
-            session['name'] = user['name']  # 確保正確設置 Uname
-            print(f"用戶 {session['name']} 登錄成功")  # 調試輸出
+            session['name'] = user['name']
+            print(f"用戶 {session['name']} 登錄成功")
             return redirect("/frontPage")
         else:
             print("密碼不正確")
@@ -57,6 +57,7 @@ def login():
     else:
         print("用戶不存在")
         return redirect("/loginPage?error=user_not_found")
+
 
 #登出    
 @app.route('/logout')
@@ -149,13 +150,28 @@ def place_dishes():
         add_to_cart(dish['dish_name'], dish['price'], dish['restaurant_name'], quantity)
         return redirect(f"/restaurantdishlist/{dish['restaurant_name']}")
 
-
 #客人看購物車 渲染
 @app.route("/cart")
 def cart_list():
     data = get_cart_detail()
     total_price = sum(item['quantity'] * item['price'] for item in data)
     return render_template('cart.html',data=data, total_price=total_price)
+
+#傳給餐廳訂單
+@app.route("/send_to_restaurant", methods=["POST"])
+def send_to_restaurant():
+    try:
+        # 清空購物車資料
+        clear_cart()
+
+        # 這裡可以加上額外的處理，例如：將訂單資訊存入另一張資料表
+        # save_order_details()
+
+        return redirect("/frontPage")  # 成功後重定向回首頁
+    except Exception as e:
+        print(f"Error clearing cart: {e}")
+        return "發生錯誤，請稍後再試！", 500
+
 
 
 
