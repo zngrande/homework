@@ -25,14 +25,14 @@
     <hr />
     <table width="800" border="1">
         <tr>
-            <td>餐廳名稱</td>
-            <td>餐點餐點名稱</td>
+            <td>餐點名稱</td>
+            <td>數量</td>
             <td>價錢</td>
         </tr>
         {% for rec in data %}
         <tr>
-            <td>{{ rec.restaurant_name }}</td>
             <td>{{ rec.dish_name}}</td>
+            <td>{{ rec.quantity}}</td>
             <td>{{ rec.price }}</td>
         </tr>
         {% endfor %}

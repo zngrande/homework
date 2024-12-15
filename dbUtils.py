@@ -148,4 +148,12 @@ def add_to_cart(dish_name, price, restaurant_name, quantity):
     except mysql.connector.Error as e:
          print("新增餐點時發生錯誤:", e)
 
+#拿到購物車資訊
+def get_cart_detail_by_restaurant_name():
+    sql = """
+        SELECT * FROM guest_cart;
+        """
+    cursor.execute(sql)
+    return cursor.fetchall()
+
 

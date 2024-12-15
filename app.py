@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart
+from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail_by_restaurant_name
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static',static_url_path='/')
@@ -133,7 +133,11 @@ def place_dishes():
     add_to_cart(dish['dish_name'], dish['price'], dish['restaurant_name'], quantity)
     return redirect(f"/restaurantdishlist/{dish['restaurant_name']}")
 
-
+#客人看購物車 渲染
+@app.route("/cart")
+def cart_list():
+    data = get_cart_detail_by_restaurant_name()
+    return render_template('cart.html',data=data)
 
 
 
