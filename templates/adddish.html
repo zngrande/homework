@@ -8,8 +8,8 @@
     <hr /> 
     
     <table width="500"> 
-        <form method="POST" action="/add_item"> 
-            <input type="text" name="name" placeholder="Item Name" required> 
+        <form method="POST" action="/add_dish"> 
+            <input type="text" name="name" placeholder="Dish Name" required> 
             <input type="number" name="price" placeholder="Price" required>             
 			<textarea name="content" placeholder="content" required></textarea>
             <button type="submit">Add dish</button> 
@@ -34,7 +34,7 @@
         {% endfor %}
 
     </table>
-    <a href="/Confirmreceipt">確認訂單</a> 
+	<a href="/confirmreceipt">確認訂單</a>
     {% with messages = get_flashed_messages() %} <!-- 檢查是否有要顯示的消息 -->
         {% if messages %} <!-- 如果有消息 -->
             <ul class="flash-messages"> <!-- 創建一個列表顯示消息 -->

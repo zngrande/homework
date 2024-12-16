@@ -109,7 +109,7 @@ def confirm_receipt(order_id):
         
 def transfer_order(order_id):
     try:
-        cursor.execute("SELECT Rid, Uid, dish_name FROM prepare_dish WHERE id = %s", (order_id,))
+        cursor.execute("SELECT Rid, Uid, dish_name FROM prepare_dish WHERE id = %s AND confirm = 1", (order_id,))
         order = cursor.fetchone()
 
         if not order:
@@ -129,7 +129,8 @@ def transfer_order(order_id):
 def get_order_data(confirm):
     sql = "SELECT * FROM prepare_dish WHERE confirm = %s;"
     cursor.execute(sql, (confirm,))
-    return cursor.fetchall()
+    return [dict(row) for row in cursor.fetchall()]  # 確保返回格式一致
+
 def add_dish(restaurant_name, dish_name, price, content):
     sql = "INSERT INTO dish (restaurant_name, dish_name, price, content) VALUES (%s, %s, %s, %s)"
     param = (restaurant_name, dish_name, price, content)
@@ -137,11 +138,32 @@ def add_dish(restaurant_name, dish_name, price, content):
     dish_id = cursor.lastrowid  # 取得新增商品的 ID
     conn.commit()  # 提交變更
 
-def update_dish(dish_id, price, content):
+def update_dish(dish_id, dish_name, price, content):
     cursor.execute("UPDATE dish SET dish_name = %s, price = %s, content = %s WHERE id = %s", (dish_name, price, content, dish_id))
-    conn.commit()  
+    conn.commit()
+
 
 def delete_dish_by_id(dish_id):   
     cursor.execute("DELETE FROM dish WHERE id = %s", (dish_id,))
     conn.commit()
 
+def get_dish_by_id(dish_id):
+    """
+    根據菜品 ID 查詢菜品詳細資訊
+    :param dish_id: 菜品 ID
+    :return: 查詢到的菜品資訊字典，若查無資料則返回 None
+    """
+    try:
+        # 執行 SQL 查詢
+        sql = "SELECT * FROM dish WHERE id = %s;"
+        cursor.execute(sql, (dish_id,))
+        # 獲取結果
+        dish = cursor.fetchone()
+        if dish:
+            return dish
+        else:
+            print(f"未找到對應的菜品 (ID: {dish_id})")
+            return None
+    except mysql.connector.Error as e:
+        print("查詢菜品時發生錯誤:", e)
+        return None

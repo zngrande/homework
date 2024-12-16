@@ -1,38 +1,37 @@
-from flask import Flask, render_template, request, session, redirect, jsonify, url_for
+from flask import Flask, render_template, request, session, redirect, jsonify, url_for, flash
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order
+from dbUtils import get_user_by_id, add_user, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_id
 from datetime import datetime, timedelta
 
-
 # creates a Flask application, specify a static folder on /
-app = Flask(__name__, static_folder='static',static_url_path='/')
-#set a secret key to hash cookies
+app = Flask(__name__, static_folder='static', static_url_path='/')
+# set a secret key to hash cookies
 app.config['SECRET_KEY'] = '123TyU%^&'
 
-#define a function wrapper to check login session
+# define a function wrapper to check login session
 def login_required(f):
-	@wraps(f)
-	def wrapper(*args, **kwargs):
-		loginID = session.get('loginID')
-		if not loginID:
-			return redirect('/loginPage.html')
-		return f(*args, **kwargs)
-	return wrapper
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        loginID = session.get('loginID')
+        if not loginID:
+            return redirect('/loginPage.html')
+        return f(*args, **kwargs)
+    return wrapper
 
-#another way to check login session
+# another way to check login session
 def isLogin():
-	return session.get('loginID')
+    return session.get('loginID')
 
 @app.route("/test/<string:name>/<int:id>")
-#取得網址作為參數
-def useParam(name,id):
-	#check login inside the function
-	if not isLogin():
-		return redirect('/loginPage.html')
-	return f"got name={name}, id={id} "
+# 取得網址作為參數
+def useParam(name, id):
+    # check login inside the function
+    if not isLogin():
+        return redirect('/loginPage.html')
+    return f"got name={name}, id={id} "
 
-#登入頁面渲染
+# 登入頁面渲染
 @app.route('/loginPage')
 def login_page():
     return render_template('loginPage.html')
@@ -57,7 +56,7 @@ def login():
                 session['Gid'] = user['Gid']
                 return redirect("/guestfrontPage")
             elif role == "restaurant":
-                return redirect("/Confirmreceipt")
+                return redirect("/confirmreceipt")
             elif role == "delivery":
                 return redirect("/deliveryfrontPage")
         else:
@@ -66,11 +65,6 @@ def login():
     else:
         print("用戶不存在")
         return redirect("/loginPage?error=user_not_found")
-
-@app.route('/Confirmreceipt')        
-def restaurant_page():
-    return render_template('/Confirmreceipt.html')
-
 
 @app.route("/orderlistPage")
 def order_list_page():
@@ -86,7 +80,15 @@ def order_list_page():
 
     return render_template('Confrimreceipt.html', data_confirm_0=data_confirm_0, data_confirm_1=data_confirm_1)
 
-@app.route("/Confirmreceipt", methods=['POST'])
+@app.route('/regrest')        
+def regrest():
+    return render_template('regrest.html')
+    
+@app.route('/confirmreceipt')        
+def confirmreceipt():
+    return render_template('confirmreceipt.html')
+
+@app.route("/confirmreceipt_action", methods=['POST'])
 @login_required
 def confirm_receipt_action():
     order_id = request.json.get('id')
@@ -114,11 +116,9 @@ def confirm_order():
 
     except Exception as e:
         return jsonify({"status": "error", "message": f"伺服器錯誤: {e}"}), 500
-        
-
 
 @app.route('/add_dish', methods=['POST'])
-def add_dish_route():
+def add_new_dish():
     if 'restaurant_name' in session:
         dish_name = request.form['dish_name']
         price = float(request.form['price'])
@@ -128,20 +128,20 @@ def add_dish_route():
             flash("新增成功！")
         except Exception as e:
             flash(f"新增失敗: {e}")
+    else:
+        flash("尚未登入，請先登入")
+        return redirect(url_for('login_page'))
     return redirect(url_for('adddish'))
-    
+
 @app.route('/adddish')
 def adddish():
-    if 'restaurant_name' in session:
-        return render_template('adddish.html')
-    else:
-        return redirect(url_for('login_page'))  # 使用正確的端點名稱
+        return render_template('adddish.html')   
         
 @app.route('/edit_dish/<int:dish_id>', methods=['GET', 'POST'])
 def edit_dish(dish_id):
     dish = get_dish_by_id(dish_id)
-    if dish is None or item['restaurant_name'] != session.get('restaurant_name'):
-        flash("找不到該拍賣品，或者該拍賣品無權限編輯")
+    if dish is None or dish['restaurant_name'] != session.get('restaurant_name'):
+        flash("找不到該菜品，或者該菜品無權限編輯")
         return redirect(url_for('adddish'))
     
     if request.method == 'POST':
@@ -149,62 +149,22 @@ def edit_dish(dish_id):
         price = float(request.form['price'])
         content = request.form['content']
         update_dish(dish_id, dish_name, content, price)
-        flash("dish is updated")  # 確保這行代碼在更新後
-        return redirect(url_for('dashboard'))
+        flash("菜品已更新")
+        return redirect(url_for('adddish'))
     
     return render_template('edit_dish.html', dish=dish)
 
-
 @app.route('/delete_dish/<int:dish_id>', methods=['POST'])
 def delete_dish(dish_id):
-    dish = get_dish_by_id(dish_id)  
-    if dish is None or dish['restaurant_name'] != session.get('restaurant_name'):  # 確認用戶權限
-        flash("I can't find it")
-        return redirect(url_for('adddish'))  
+    dish = get_dish_by_id(dish_id)
+    if dish is None or dish['restaurant_name'] != session.get('restaurant_name'):
+        flash("找不到該菜品，或者無權刪除")
+        return redirect(url_for('adddish'))
     
-    delete_dish_by_id(dish_id)  
-    flash("dish is delete")
-    return redirect(url_for('adddish'))    
-
-@app.route('/add_dish', methods=['POST'])
-def add_dish_route():
-    if 'restaurant_name' in session:
-        dish_name = request.form['dish_name']
-        price = float(request.form['price'])
-        content = request.form['content']
-        try:
-            add_dish(session['restaurant_name'], dish_name, price, content)
-            flash("新增成功！")
-        except Exception as e:
-            flash(f"新增失敗: {e}")
+    delete_dish_by_id(dish_id)
+    flash("菜品已刪除")
     return redirect(url_for('adddish'))
 
-@app.route('/edit_dish/<int:dish_id>', methods=['GET', 'POST'])
-def edit_dish(dish_id):
-    dish = get_dish_by_id(dish_id)
-    if dish is None or item['restaurant_name'] != session.get('restaurant_name'):
-        flash("找不到該拍賣品，或者該拍賣品無權限編輯")
-        return redirect(url_for('adddish'))
-    
-    if request.method == 'POST':
-        dish_name = request.form['dish_name']
-        price = float(request.form['price'])
-        content = request.form['content']
-        update_dish(dish_id, dish_name, content, price)
-        flash("dish is updated")  # 確保這行代碼在更新後
-        return redirect(url_for('dashboard'))
-    
-    return render_template('edit_dish.html', dish=dish)
-
-
-@app.route('/delete_dish/<int:dish_id>', methods=['POST'])
-def delete_dish(dish_id):
-    dish = get_dish_by_id(dish_id)  
-    if dish is None or dish['restaurant_name'] != session.get('restaurant_name'):  # 確認用戶權限
-        flash("I can't find it")
-        return redirect(url_for('adddish'))  
-    
-    delete_dish_by_id(dish_id)  
-    flash("dish is delete")
-    return redirect(url_for('adddish'))   
-
+@app.before_request
+def before_request():
+    print(f"Session at start: {session}")  # 確保會話資訊是正確的
