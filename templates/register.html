@@ -2,20 +2,47 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>register</title>
+    <title>Register</title>
+    <script>
+        function updateFields() {
+            const role = document.getElementById("role").value;
+            const addressField = document.getElementById("addressField");
+
+            addressField.style.display = "block";
+}
+    </script>
 </head>
 <body>
     <p>註冊</p>
     <hr />
     <form method="post" action="/register">
+        <label>角色:</label>
+        <select id="role" name="role" onchange="updateFields()" required>
+            <option value="" selected disabled>請選擇角色</option>
+            <option value="customer">客戶</option>
+            <option value="restaurant">餐廳</option>
+            <option value="delivery">外送員</option>
+        </select>
+        
+        <br>
+        
         <label>帳號:</label>
-        <input name="Uid" type="text" required /> <br>
-
-        <label>姓名:</label>
-        <input name="Uname" type="text" required /> <br>
+        <input name="id" type="text" required /> <br>
 
         <label>密碼:</label>
         <input name="pw" type="password" required /> <br>
+
+        <label>姓名:</label>
+        <input name="name" type="text" required /> <br>
+
+        <label>電話:</label>
+        <input name="phone" type="text" required /> <br>
+
+        <!-- 僅客戶和餐廳需要提供地址 -->
+        <div id="addressField">
+            <label>地址:</label>
+            <input name="address" type="text" required /> <br>
+        </div>
 
         <button type="submit" onclick="return confirm('註冊成功')">確認</button>
     </form>

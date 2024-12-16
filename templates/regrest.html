@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>餐廳資料</title>
+</head>
+<body>
+    <p>餐廳資料</p>
+    <hr />
+    <form method="post">
+        <label>餐廳名稱:</label>
+        <input name="name" type="text" placeholder="name" required /> <br>
+		
+        <label>餐廳地址:</label>
+        <input name="address" type="text" placeholder="address" required /> <br>
+
+		<label>餐廳電話:</label>
+        <input name="phone" type="number" placeholder="phone" required /> <br>
+		
+        <button type="submit" onclick="return confirm('確定要儲存修改嗎？')">儲存修改</button>
+    </form>
+
+    <a href="/Confirmreceipt">回到首頁</a>
+</body>
+</html>

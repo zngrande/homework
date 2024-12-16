@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Edit dish</title>
+</head>
+<body>
+<h2>edit dish</h2>
+<hr />
+<table width="500">
+	<form method="POST" action="{{ url_for('edit_dish', dish_id=dish.name) }}">
+		<input type="text" name="dish_name" value="{{ dish.dish_name }}" required>
+		<input type="number" name="price" value="{{ dish.price }}" required>
+		<textarea name="content" required>{{ dish.content }}</textarea>
+		<button type="submit">save edit</button>
+	</form>
+</body>
+</html>

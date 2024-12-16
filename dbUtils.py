@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # Connect to MariaDB Platform
 import mysql.connector #mariadb
-import sqlite3
+import datetime
 
 try:
 	#連線DB
@@ -10,7 +10,7 @@ try:
 		password="",
 		host="localhost",
 		port=3306,
-		database="hw2"
+		database="food_pangolin"
 	)
 	#建立執行SQL指令用之cursor, 設定傳回dictionary型態的查詢結果 [{'欄位名':值, ...}, ...]
 	cursor=conn.cursor(dictionary=True)
@@ -19,112 +19,129 @@ except mysql.connector.Error as e: # mariadb.Error as e:
 	print("Error connecting to DB")
 	exit(1)
 
-#新增商品
-def add(name, content, starting_price, Uid):
-    try:
-        sql = "INSERT INTO website1 (name, content, starting_price, Uid) VALUES (%s, %s, %s, %s);"
-        param = (name, content, starting_price, Uid)
-        cursor.execute(sql, param)
-        conn.commit()
-        print("商品已成功新增")
-    except mysql.connector.Error as e:
-         print("新增商品時發生錯誤:", e)
 
-#刪除商品
-def delete(Pid):
+# 新增註冊者
+def add_user(id, pw, role, name, phone, address):
     try:
-        # 先删除 price1 表中引用的记录
-        delete_price_sql = "DELETE FROM price1 WHERE Pid = %s;"
-        cursor.execute(delete_price_sql, (Pid,))
+        if role == "customer":
+            # 取得最大 Gid 並加 1 為新使用者分配 Gid
+            cursor.execute("SELECT MAX(Gid) AS max_gid FROM guest;")
+            result = cursor.fetchone()
+            new_gid = (result['max_gid'] + 1) if result['max_gid'] is not None else 1
+            sql = "INSERT INTO guest (Gid, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_gid, id, pw, name, phone, address))
+
+        elif role == "restaurant":
+            # 取得最大 Rid 並加 1 為新使用者分配 Rid
+            cursor.execute("SELECT MAX(Rid) AS max_rid FROM restaurant;")
+            result = cursor.fetchone()
+            new_rid = (result['max_rid'] + 1) if result['max_rid'] is not None else 1
+            sql = "INSERT INTO restaurant (Rid, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_rid, id, pw, name, phone, address))
+
+        elif role == "delivery":
+            # 取得最大 Did 並加 1 為新使用者分配 Did
+            cursor.execute("SELECT MAX(Did) AS max_did FROM delivery_man;")
+            result = cursor.fetchone()
+            new_did = (result['max_did'] + 1) if result['max_did'] is not None else 1
+            sql = "INSERT INTO delivery_man (Did, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_did, id, pw, name, phone, address))
+
+            # 提交變更到資料庫
+            conn.commit()
+            print(f"{role} 註冊成功，ID 為 {id}")
+        else:
+            print("無效的角色")
+            return
+
+        # 提交變更到資料庫
+        conn.commit()
+        print(f"{role} 註冊成功，ID 為 {id}")
+    
+    except mysql.connector.Error as e:
+        print("註冊使用者時發生錯誤:", e)
+
+# 測試函數
+if __name__ == "__main__":
+    # 假設前端傳入的數據
+    sample_data = {
+        "id": "C123",
+        "pw": "securepassword",
+        "role": "customer",
+        "name": "John Doe"
+    }
+    add_user(sample_data["id"], sample_data["pw"], sample_data["role"], sample_data["name"])
+
+# 拿到用戶ID，根據角色從對應表查詢
+def get_user_by_id(id, role):
+    try:
+        if role == "customer":
+            sql = "SELECT * FROM guest WHERE id = %s;"
+        elif role == "restaurant":
+            sql = "SELECT * FROM restaurant WHERE id = %s;"
+        elif role == "delivery":
+            sql = "SELECT * FROM delivery_man WHERE id = %s;"
+        else:
+            print("角色無效")
+            return None
+
+        cursor.execute(sql, (id,))
+        user = cursor.fetchone()
+        return user
+    except Exception as e:
+        print(f"查詢用戶時發生錯誤: {e}")
+        return None
+    
+def confirm_receipt(order_id):
+    try:
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        sql_update = """
+            UPDATE prepare_dish
+            SET confirm = 1, confirm_time = %s
+            WHERE id = %s AND confirm = 0;
+        """
+        cursor.execute(sql_update, (current_time, order_id))
+        conn.commit()
+    except mysql.connector.Error as e:
+        conn.rollback()
+        print("錯誤: ", e)
+
         
-        # 然后再删除 website1 表中的记录
-        sql = "DELETE FROM website1 WHERE Pid = %s;"
-        cursor.execute(sql, (Pid,))
-        conn.commit()
-        print("商品已成功刪除")
-    except mysql.connector.Error as e:
-        print("刪除商品時發生錯誤:", e)
-
-#新增註冊者
-def add_user(Uid, Uname, pw):
+def transfer_order(order_id):
     try:
-        sql = "INSERT INTO accounts1 (Uid, Uname, pw) VALUES (%s, %s, %s);"
-        cursor.execute(sql, (Uid, Uname, pw))
+        cursor.execute("SELECT Rid, Uid, dish_name FROM prepare_dish WHERE id = %s", (order_id,))
+        order = cursor.fetchone()
+
+        if not order:
+            return False, "訂單不存在"
+
+        cursor.execute(
+            "INSERT INTO orderlist (Rid, Uid, dish_name, order_time) VALUES (%s, %s, %s, NOW())",
+            (order['Rid'], order['Uid'], order['dish_name'])
+        )
+        cursor.execute("DELETE FROM prepare_dish WHERE id = %s", (order_id,))
         conn.commit()
-        print("用戶註冊成功")
+        return True, "訂單已成功轉移"
     except mysql.connector.Error as e:
-        print("註冊用戶時發生錯誤:", e)
-
-#修改商品
-def update(Pid, name, content, starting_price):
-    sql = "UPDATE website1 SET name = %s, content = %s, starting_price = %s WHERE Pid = %s;"
-    param = (name, content, starting_price, Pid)
+        conn.rollback()
+        return False, f"資料庫操作失敗: {e}"
+        
+def get_order_data(confirm):
+    sql = "SELECT * FROM prepare_dish WHERE confirm = %s;"
+    cursor.execute(sql, (confirm,))
+    return cursor.fetchall()
+def add_dish(restaurant_name, dish_name, price, content):
+    sql = "INSERT INTO dish (restaurant_name, dish_name, price, content) VALUES (%s, %s, %s, %s)"
+    param = (restaurant_name, dish_name, price, content)
     cursor.execute(sql, param)
+    dish_id = cursor.lastrowid  # 取得新增商品的 ID
+    conn.commit()  # 提交變更
+
+def update_dish(dish_id, price, content):
+    cursor.execute("UPDATE dish SET dish_name = %s, price = %s, content = %s WHERE id = %s", (dish_name, price, content, dish_id))
+    conn.commit()  
+
+def delete_dish_by_id(dish_id):   
+    cursor.execute("DELETE FROM dish WHERE id = %s", (dish_id,))
     conn.commit()
-
-
-def getList():
-    sql = """
-    SELECT website1.Pid, website1.name, website1.content, website1.starting_price,  
-           COALESCE(MAX(price1.now_price), 0) AS highest_price,
-           COALESCE((SELECT Uname FROM accounts1 WHERE Uid = (SELECT Uid FROM price1 WHERE Pid = website1.Pid ORDER BY now_price DESC LIMIT 1)), '無') AS Uname
-    FROM website1 
-    LEFT JOIN price1 ON website1.Pid = price1.Pid
-    GROUP BY website1.Pid, website1.name, website1.content, website1.starting_price;
-    """
-    cursor.execute(sql)
-    return cursor.fetchall()
-
-#設置競標價格
-def placePrice(now_price, Pid, Uid, name):
-    sql = "INSERT INTO price1 (now_price, Pid, Uid, name) VALUES (%s, %s, %s, %s);"
-    cursor.execute(sql, (now_price, Pid, Uid, name))
-    conn.commit()   
-
-#拿到用戶ID
-def get_user_by_uid2(Uid):
-    sql = "SELECT * FROM accounts1 WHERE Uid = %s;"
-    cursor.execute(sql, (Uid,))
-    user = cursor.fetchone()
-    return user
-
-def get_user_products(Uid):
-    sql = """
-    SELECT website1.Pid, website1.name, website1.content, website1.starting_price,
-           COALESCE(MAX(price1.now_price), 0) AS highest_price 
-    FROM website1 
-    LEFT JOIN price1 ON website1.Pid = price1.Pid
-    WHERE website1.Uid = %s
-    GROUP BY website1.Pid, website1.name, website1.content, website1.starting_price;
-    """
-    cursor.execute(sql, (Uid,))
-    products = cursor.fetchall()
-    return products
-
-#拿到商品資訊
-def getProductDetailsById(Pid):
-    sql = "SELECT * FROM website1 WHERE Pid = %s;"
-    cursor.execute(sql, (Pid,))
-    return cursor.fetchone()
-
-#拿到最高價的人
-def getHighestPriceById(Pid):
-    sql = "SELECT MAX(now_price) AS highest_price FROM price1 WHERE Pid = %s;"
-    cursor.execute(sql, (Pid,))
-    result = cursor.fetchone()
-    return result['highest_price'] if result['highest_price'] else 0
-
-#競標紀錄
-def get_bid_records_by_pid(Pid):
-    sql = """
-    SELECT accounts1.Uname, price1.now_price, price1.bid_time
-    FROM price1
-    JOIN accounts1 ON price1.Uid = accounts1.Uid
-    WHERE price1.Pid = %s
-    ORDER BY price1.bid_time DESC;
-    """
-    cursor.execute(sql, (Pid,))
-    return cursor.fetchall()
-
-
 
