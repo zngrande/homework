@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>首頁</title>
+    <style>
+        body {
+            position: relative; /* 相對定位，便於放置按鈕 */
+        }
+        .logout-button, .cart-button {
+            position: absolute; /* 使用絕對定位 */
+            top: -5px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+        .logout-button {
+            right: 0px; /* 靠右 */
+        }
+        .cart-button {
+            right: 80px; /* 靠右，位於登出按鈕左側 */
+        }
+        .button {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            text-align: center; /* 文字置中 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+        }
+        .button.delete {
+            background-color: #dc3545; /* 刪除按鈕的顏色 */
+        }
+        .welcome-message {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <a href="/cart" class="button cart-button">購物車</a> <!-- 購物車按鈕 -->
+    <a href="/logout" class="button logout-button">登出</a> <!-- 登出按鈕 -->
+
+    <!-- 歡迎訊息 -->
+    <p class="welcome-message">您好，{{ name }}</p>
+
+    <p>首頁</p>
+    <hr />
+    <table width="600" border="1">
+        <tr>
+            <td>餐廳名稱</td>
+            <td>餐廳地址</td>
+            <td>評分</td>
+        </tr>
+        {% for rec in data %}
+        <tr>
+            <td><a href="/restaurantdishlist/{{ rec.name }}">{{ rec.name }}</a></td>
+            <td>{{ rec.address }}</td>
+            <td>{{ rec.point }}</td>
+        </tr>        
+        {% endfor %}
+    </table>
+    <br>
+</body>
+</html>

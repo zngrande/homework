@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>cart</title>
+    <style>
+        .logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <a href="/loginPage" class="logout-button">登出</a> <!-- 新增的登出按鈕 -->
+
+    <p>購物車</p>
+    <hr />
+    <table width="800" border="1">
+        <tr>
+            <td>餐點名稱</td>
+            <td>數量</td>
+            <td>價錢</td>
+        </tr>
+        {% for rec in data %}
+        <tr>
+            <td>{{ rec.dish_name }}</td>
+            <td>{{ rec.quantity }}</td>
+            <td>{{ rec.price }}</td>
+        </tr>
+        {% endfor %}
+        <!-- 新增顯示總金額的部分 -->
+        <tr>
+            <td colspan="2" style="text-align: right;"><strong>總金額：</strong></td>
+            <td><strong>{{ total_price }}</strong></td>
+        </tr>
+    </table>
+    <form method="post" action="/send_to_restaurant">
+        <button type="submit">確認</button>
+    <a href="/guestfrontPage">回到首頁</a>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>login</title>
+</head>
+<body>
+<p>登入</p>
+<hr>
+<!-- form -->
+<form method="POST" action="/login">
+    帳號: <input type="text" name="id" placeholder="帳號" required> <br>
+    密碼: <input type="password" name="pw" placeholder="密碼" required> <br>
+    角色: 
+    <select name="role" required>
+        <option value="customer">客戶</option>
+        <option value="restaurant">餐廳</option>
+        <option value="delivery">外送員</option>
+    </select> <br>
+    <button type="submit">登入</button>&nbsp;|&nbsp;<a href="/register">註冊</a>
+</form>
+
+
+<!-- 錯誤提示 -->
+{% if request.args.get('error') == 'wrong_password' %}
+    <p style="color: red;">密碼錯誤，請重試。</p>
+{% elif request.args.get('error') == 'user_not_found' %}
+    <p style="color: red;">用戶不存在，請檢查輸入。</p>
+{% endif %}
+
+</body>
+</html>
