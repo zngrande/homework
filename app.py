@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user,add_user2, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart
+from dbUtils import get_user_by_id, add_user,add_user2, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static',static_url_path='/')
@@ -48,6 +48,7 @@ def login():
         if user['pw'] == pw:
             session['loginID'] = id
             session['id'] = id
+            session['Gid'] = user['Gid']
             session['name'] = user['name']
             print(f"用戶 {session['name']} 登錄成功")
             
@@ -140,7 +141,6 @@ def dish_records(name):
 # 新增或更新購物車
 @app.route('/place_dishes', methods=['POST'])
 def place_dishes():
-    restaurant_name = request.form.get('restaurant_name')
     dish_name = request.form.get('dish_name')
     quantity = request.form.get('quantity')  # 使用 get() 防止 KeyError
 
@@ -154,18 +154,25 @@ def place_dishes():
     except ValueError:
         return "數量必須為整數", 400
 
+    # 從 session 中獲取用戶的 Gid
+    gid = session.get('Gid')
+    if not gid:
+        return redirect("/loginPage?error=not_logged_in")  # 用戶未登入，跳轉到登入頁面
+
+    # 獲取菜品詳細資料
     dish = get_dish_details_by_dish_name(dish_name)
+    
     if quantity == 0:
-        delete_from_cart(dish_name)
+        delete_from_cart(dish_name, gid)  # 修改 delete_from_cart 函數，傳入 Gid
         return redirect(f"/restaurantdishlist/{dish['restaurant_name']}")
     else:
-        # 如果數量大於 0，將餐點加入購物車
-        #dish = get_dish_details_by_dish_name(dish_name)
         if not dish:
             return f"未找到餐點資料，餐點名稱: {dish_name}", 404
 
-        add_to_cart(dish['dish_name'], dish['price'], dish['restaurant_name'], quantity)
+        # 使用 Gid 呼叫 add_to_cart
+        add_to_cart(dish['dish_name'], dish['price'], dish['restaurant_name'], quantity, gid)
         return redirect(f"/restaurantdishlist/{dish['restaurant_name']}")
+
 
 #客人看購物車 渲染
 @app.route("/cart")
@@ -178,16 +185,20 @@ def cart_list():
 @app.route("/send_to_restaurant", methods=["POST"])
 def send_to_restaurant():
     try:
-        # 清空購物車資料
-        clear_cart()
+        # 獲取 Gid，通常從 session 中獲取
+        gid = session.get('Gid')
+        if not gid:
+            return redirect("/loginPage?error=not_logged_in")  # 用戶未登入，跳轉到登入頁面
 
-        # 這裡可以加上額外的處理，例如：將訂單資訊存入另一張資料表
-        # save_order_details()
+        # 呼叫 send_dish 函數，將購物車資料送到 prepare_dish 表
+        send_dish(gid)
 
-        return redirect("/frontPage")  # 成功後重定向回首頁
+        # 重定向到首頁或其他頁面
+        return redirect("/guestfrontPage")  # 成功後重定向回首頁
     except Exception as e:
-        print(f"Error clearing cart: {e}")
+        print(f"Error sending order to restaurant: {e}")
         return "發生錯誤，請稍後再試！", 500
+
 
 
 

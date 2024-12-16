@@ -137,24 +137,24 @@ def get_dish_details_by_dish_name(dish_name):
     return cursor.fetchone()
 
 # 新增或更新購物車
-def add_to_cart(dish_name, price, restaurant_name, quantity):
+def add_to_cart(dish_name, price, restaurant_name, quantity, Gid):
     try:
         # 如果數量為0，刪除該菜品
         if quantity == 0:
             sql_delete = """
                 DELETE FROM guest_cart
-                WHERE dish_name = %s AND restaurant_name = %s;
+                WHERE dish_name = %s AND restaurant_name = %s AND Gid = %s;
             """
-            cursor.execute(sql_delete, (dish_name, restaurant_name))
+            cursor.execute(sql_delete, (dish_name, restaurant_name, Gid))
             conn.commit()
             print(f"已刪除 {dish_name} 的購物車項目")
         else:
             # 檢查購物車中是否已經有該菜品
             sql_check = """
                 SELECT * FROM guest_cart
-                WHERE dish_name = %s AND restaurant_name = %s;
+                WHERE dish_name = %s AND restaurant_name = %s AND Gid = %s;
             """
-            cursor.execute(sql_check, (dish_name, restaurant_name))
+            cursor.execute(sql_check, (dish_name, restaurant_name, Gid))
             existing_item = cursor.fetchone()
 
             if existing_item:
@@ -162,17 +162,17 @@ def add_to_cart(dish_name, price, restaurant_name, quantity):
                 sql_update = """
                     UPDATE guest_cart
                     SET quantity = %s
-                    WHERE dish_name = %s AND restaurant_name = %s;
+                    WHERE dish_name = %s AND restaurant_name = %s AND Gid = %s;
                 """
-                cursor.execute(sql_update, (quantity, dish_name, restaurant_name))
+                cursor.execute(sql_update, (quantity, dish_name, restaurant_name, Gid))
                 print(f"已更新 {dish_name} 的數量為 {quantity}")
             else:
                 # 如果購物車中沒有該菜品，新增該菜品
                 sql_insert = """
-                    INSERT INTO guest_cart (dish_name, price, restaurant_name, quantity)
-                    VALUES (%s, %s, %s, %s);
+                    INSERT INTO guest_cart (dish_name, price, restaurant_name, quantity, Gid)
+                    VALUES (%s, %s, %s, %s, %s);
                 """
-                cursor.execute(sql_insert, (dish_name, price, restaurant_name, quantity))
+                cursor.execute(sql_insert, (dish_name, price, restaurant_name, quantity, Gid))
                 print(f"已將 {dish_name} 新增到購物車")
 
         # 提交變更
@@ -180,11 +180,12 @@ def add_to_cart(dish_name, price, restaurant_name, quantity):
     except mysql.connector.Error as e:
         print("處理購物車時發生錯誤:", e)
 
+
 #刪除購物車內容
-def delete_from_cart(dish_name):
+def delete_from_cart(dish_name, Gid):
     try:
-        sql = "DELETE FROM guest_cart WHERE dish_name = %s;"
-        cursor.execute(sql, (dish_name,))
+        sql = "DELETE FROM guest_cart WHERE dish_name = %s AND Gid = %s;"
+        cursor.execute(sql, (dish_name,Gid,))
         conn.commit()
         print(f"已從購物車中刪除餐點: {dish_name}")
     except mysql.connector.Error as e:
@@ -207,29 +208,57 @@ def send_dish(Gid):
     WHERE guest_cart.Gid = %s;
     """
     
-    # 插入到 prepare_dish 表的語句
-    sql_insert = """
-    INSERT INTO prepare_dish (Rid, dish_name, quantity, Gid)
-    VALUES (%s, %s, %s, %s)
+    # 插入訂單的語句（order_id 是自動增長的）
+    sql_insert_order = """
+    INSERT INTO orders (Gid, order_date)
+    VALUES (%s, NOW());
     """
     
-    # 取得資料
-    cursor.execute(sql_select, (Gid,))
-    cart_data = cursor.fetchall()
+    # 插入到 prepare_dish 表的語句
+    sql_insert_prepare_dish = """
+    INSERT INTO prepare_dish (Rid, dish_name, quantity, Gid, order_id)
+    VALUES (%s, %s, %s, %s, %s)
+    """
+    
+    try:
+        # 取得購物車資料
+        cursor.execute(sql_select, (Gid,))
+        cart_data = cursor.fetchall()
 
-    # 插入資料到 prepare_dish
-    for item in cart_data:
-        Rid = item['Rid']
-        dish_name = item['dish_name']
-        quantity = item['quantity']
-        Gid = item['Gid']
-        cursor.execute(sql_insert, (Rid, dish_name, quantity, Gid))
+        if not cart_data:
+            print("購物車中沒有資料")
+            return
 
-    # 清空該使用者的購物車資料
-    sql_delete = "DELETE FROM guest_cart WHERE Gid = %s;"
-    cursor.execute(sql_delete, (Gid,))
+        # 插入訂單並獲取自動生成的 order_id
+        cursor.execute(sql_insert_order, (Gid,))
+        order_id = cursor.lastrowid  # 獲取剛剛插入的訂單的 order_id
 
-    return cursor.fetchall()
+        print(f"生成的訂單 ID: {order_id}")
+
+        # 插入資料到 prepare_dish
+        for item in cart_data:
+            Rid = item['Rid']
+            dish_name = item['dish_name']
+            quantity = item['quantity']
+            Gid = item['Gid']
+            print(f"插入資料: Rid={Rid}, dish_name={dish_name}, quantity={quantity}, Gid={Gid}, order_id={order_id}")
+            cursor.execute(sql_insert_prepare_dish, (Rid, dish_name, quantity, Gid, order_id))
+
+        # 清空該使用者的購物車資料
+        sql_delete = "DELETE FROM guest_cart WHERE Gid = %s;"
+        cursor.execute(sql_delete, (Gid,))
+
+        print(f"清空用戶 {Gid} 的購物車資料")
+        
+        # 提交變更
+        conn.commit()
+        return cursor.fetchall()
+
+    except mysql.connector.Error as e:
+        print(f"資料庫錯誤: {e}")
+        return "資料庫錯誤，請稍後再試！", 500
+
+
 
  
 
