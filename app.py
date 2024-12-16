@@ -115,8 +115,9 @@ def front_page2():
 #客人看餐廳 渲染
 @app.route("/guestfrontPage")
 def restaurant_list():
+    name = session.get('name', '訪客')
     data = get_all_restaurants()
-    return render_template('guestfrontPage.html',data=data)
+    return render_template('guestfrontPage.html',data=data, name = name)
 
 @app.route("/restaurantdishlist/<string:name>")
 def dish_records(name):

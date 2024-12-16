@@ -198,6 +198,7 @@ def get_cart_detail():
     cursor.execute(sql)
     return cursor.fetchall()
 
+#傳訂單給餐廳
 def send_dish(Gid):
     # 查詢購物車中的資料
     sql_select = """
@@ -229,6 +230,8 @@ def send_dish(Gid):
             print("購物車中沒有資料")
             return
 
+        print(cart_data)
+
         # 插入訂單並獲取自動生成的 order_id
         cursor.execute(sql_insert_order, (Gid,))
         order_id = cursor.lastrowid  # 獲取剛剛插入的訂單的 order_id
@@ -252,7 +255,7 @@ def send_dish(Gid):
         
         # 提交變更
         conn.commit()
-        return cursor.fetchall()
+        return "訂單成功送出", 200
 
     except mysql.connector.Error as e:
         print(f"資料庫錯誤: {e}")
