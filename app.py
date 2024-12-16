@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect
 import sqlite3
 from functools import wraps
-from dbUtils import get_user_by_id, add_user,add_user2, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish
+from dbUtils import get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static',static_url_path='/')
@@ -48,11 +48,11 @@ def login():
         if user['pw'] == pw:
             session['loginID'] = id
             session['id'] = id
-            session['Gid'] = user['Gid']
             session['name'] = user['name']
             print(f"用戶 {session['name']} 登錄成功")
             
             if role == "customer":
+                session['Gid'] = user['Gid']
                 return redirect("/guestfrontPage")
             elif role == "restaurant":
                 return redirect("/restaurantfrontPage")
@@ -83,22 +83,18 @@ def register():
         pw = form['pw']
         name = form['name']
         phone = form['phone']
-        role = form['role']  # 取得角色
+        role = form['role'] 
+        address = form['address']
 
-        # 檢查角色並呼叫對應的函數
-        if role == "customer" or role == "restaurant":
-            address = form['address'] 
-            add_user(id, pw, role, name, phone, address)
-        elif role == "delivery":
-            add_user2(id, pw, role, name, phone) 
-        else:
-            return "無效的角色", 400  
+        # 新增使用者
+        add_user(id, pw, role, name, phone, address)
 
         # 註冊成功後重定向到登入頁面
         return redirect('/loginPage')
 
     # 使用 GET 方法時，返回註冊頁面
     return render_template('register.html')
+
 
 
 

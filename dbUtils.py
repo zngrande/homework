@@ -19,7 +19,7 @@ except mysql.connector.Error as e: # mariadb.Error as e:
 	exit(1)
 
 
-# 新增註冊者(客戶餐廳)
+# 新增註冊者
 def add_user(id, pw, role, name, phone, address):
     try:
         if role == "customer":
@@ -38,28 +38,17 @@ def add_user(id, pw, role, name, phone, address):
             sql = "INSERT INTO restaurant (Rid, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
             cursor.execute(sql, (new_rid, id, pw, name, phone, address))
 
-        else:
-            print("無效的角色")
-            return
-
-        # 提交變更到資料庫
-        conn.commit()
-        print(f"{role} 註冊成功，ID 為 {id}")
-    
-    except mysql.connector.Error as e:
-        print("註冊使用者時發生錯誤:", e)
-
-# 新增註冊者(外送員)
-def add_user2(id, pw, role, name, phone):
-    try:
-        if role == "delivery":
+        elif role == "delivery":
             # 取得最大 Did 並加 1 為新使用者分配 Did
             cursor.execute("SELECT MAX(Did) AS max_did FROM delivery_man;")
             result = cursor.fetchone()
             new_did = (result['max_did'] + 1) if result['max_did'] is not None else 1
-            sql = "INSERT INTO delivery_man (Did, id, pw, name, phone) VALUES (%s, %s, %s, %s, %s);"
-            cursor.execute(sql, (new_did, id, pw, name, phone))
+            sql = "INSERT INTO delivery_man (Did, id, pw, name, phone, address) VALUES (%s, %s, %s, %s, %s, %s);"
+            cursor.execute(sql, (new_did, id, pw, name, phone, address))
 
+            # 提交變更到資料庫
+            conn.commit()
+            print(f"{role} 註冊成功，ID 為 {id}")
         else:
             print("無效的角色")
             return
@@ -70,7 +59,6 @@ def add_user2(id, pw, role, name, phone):
     
     except mysql.connector.Error as e:
         print("註冊使用者時發生錯誤:", e)
-
 
 # 測試函數
 if __name__ == "__main__":

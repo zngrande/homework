@@ -8,9 +8,8 @@
             const role = document.getElementById("role").value;
             const addressField = document.getElementById("addressField");
 
-            // 根據角色顯示或隱藏欄位
-            addressField.style.display = (role === "customer" || role === "restaurant") ? "block" : "none";
-        }
+            addressField.style.display = "block";
+}
     </script>
 </head>
 <body>
@@ -40,7 +39,7 @@
         <input name="phone" type="text" required /> <br>
 
         <!-- 僅客戶和餐廳需要提供地址 -->
-        <div id="addressField" style="display:none;">
+        <div id="addressField">
             <label>地址:</label>
             <input name="address" type="text" required /> <br>
         </div>
