@@ -316,7 +316,9 @@ def confirm_receipt_action():
     order_id = request.json.get('id')
     confirm_receipt(order_id)  # 處理確認接單操作
     return jsonify({"status": "success"}), 200  # 回傳成功訊息
- '''   
+ ''' 
+
+'''  
 @app.route("/confirmOrder", methods=["POST"])
 def confirm_order():
     try:
@@ -338,7 +340,7 @@ def confirm_order():
 
     except Exception as e:
         return jsonify({"status": "error", "message": f"伺服器錯誤: {e}"}), 500
-
+'''
 @app.route('/add_dish', methods=['POST'])
 def add_new_dish():
     if 'restaurant_name' in session:

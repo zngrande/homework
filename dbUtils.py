@@ -311,7 +311,7 @@ def transfer_order(order_id):
         order = cursor.fetchall()
 
         if not order:
-            return False, "訂單不存在"
+            return "訂單不存在"
 
         for item in order:
             Rid = item['Rid']
@@ -325,10 +325,10 @@ def transfer_order(order_id):
         sql_delete = "DELETE FROM prepare_dish WHERE order_id = %s"
         cursor.execute(sql_delete, (order_id,))
         conn.commit()
-        return True, "訂單已成功轉移"
+        return "訂單已成功轉移"
     except mysql.connector.Error as e:
         conn.rollback()
-        return False, f"資料庫操作失敗: {e}"
+        return  f"資料庫操作失敗: {e}"
 
 def get_order_data(confirm, Rid):
     sql = "SELECT * FROM prepare_dish WHERE confirm = %s AND Rid=%s ;"
