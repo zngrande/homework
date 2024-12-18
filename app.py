@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect,jsonify, url_for, flash
 import sqlite3
 from functools import wraps
-from dbUtils import get_pending_orders, accept_order, pick_up_order, complete_order, get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_id
+from dbUtils import get_pending_orders, accept_order, pick_up_order, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_id
 from datetime import datetime, timedelta
 
 # creates a Flask application, specify a static folder on /
@@ -309,7 +309,8 @@ def regrest():
     
 @app.route('/confirmreceipt')        
 def confirmreceipt():
-    return render_template('confirmreceipt.html')
+    data=get_prepare_dish()
+    return render_template('confirmreceipt.html',data=data)
 
 @app.route("/confirmreceipt_action", methods=['POST'])
 @login_required

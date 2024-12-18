@@ -191,9 +191,10 @@ def send_dish(Gid):
     # 查詢購物車中的資料
     sql_select = """
     SELECT guest_cart.restaurant_name, guest_cart.dish_name, guest_cart.price, guest_cart.quantity, 
-           guest_cart.Gid, restaurant.Rid
+           guest_cart.Gid, restaurant.Rid, guest.name
     FROM guest_cart
     JOIN restaurant ON restaurant.name = guest_cart.restaurant_name
+    JOIN guest ON guest.Gid = guest_cart.Gid
     WHERE guest_cart.Gid = %s;
     """
     
@@ -365,3 +366,7 @@ def get_dish_by_id(dish_id):
         print("查詢菜品時發生錯誤:", e)
         return None
 
+def get_prepare_dish():
+    sql = "SELECT * FROM prepare_dish;"
+    cursor.execute(sql)
+    return cursor.fetchall()

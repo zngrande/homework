@@ -83,13 +83,13 @@
         </thead>
         <tbody>
             <!-- 顯示 confirm = 0 的資料 -->
-            {% for rec in data_confirm_0 %}
+            {% for rec in data %}
             <tr id="row-{{ rec.id }}">
                 <td>{{ rec.dish_name }}</td>
-                <td>{{ rec.quantiy }}</td>
-                <td>{{ rec.customer_name }}</td>
+                <td>{{ rec.quantity }}</td>
+                <td>{{ rec.Gid}}</td>
                 <td>
-                    <a class="action-link" href="javascript:void(0);" onclick="updateConfirm({{ rec.id }})">
+                    <a class="action-link" href="javascript:void(0);" onclick="updateConfirm(id)">
                         確認接單
                     </a>
                 </td>
@@ -112,13 +112,13 @@
         </thead>
         <tbody>
             <!-- 顯示 confirm = 1 的資料 -->
-            {% for rec in data_confirm_1 %}
+            {% for rec in data %}
             <tr>
                 <td>{{ rec.dish_name }}</td>
                 <td>{{ rec.finish_time }}</td>
-                <td>{{ rec.Gid }}</td>
+                <td>{{ rec.Gid}}</td>
                 <td>
-                    <a class="action-link" href="javascript:void(0);" onclick="confirmOrder({ rec.id })">
+                    <a class="action-link" href="javascript:void(0);" onclick="confirmOrder(id)">
                         已完成
                     </a>
                 </td>
