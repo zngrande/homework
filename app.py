@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, session, redirect,jsonify
+from flask import Flask, render_template, request, session, redirect,jsonify, url_for, flash
 import sqlite3
 from functools import wraps
 from dbUtils import get_pending_orders, accept_order, pick_up_order, complete_order, get_user_by_id, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_id
+from datetime import datetime, timedelta
 
 # creates a Flask application, specify a static folder on /
 app = Flask(__name__, static_folder='static', static_url_path='/')
@@ -58,15 +59,13 @@ def login():
             elif role == "restaurant":
                 return redirect("/confirmreceipt")
             elif role == "delivery":
-                return redirect("/deliveryfrontPage")
+                return redirect("/view_orders")
         else:
             print("密碼不正確")
             return redirect("/loginPage?error=wrong_password")
     else:
         print("用戶不存在")
         return redirect("/loginPage?error=user_not_found")
-
-<<<<<<< HEAD
 
 #登出    
 @app.route('/logout')
@@ -96,19 +95,6 @@ def register():
 
     # 使用 GET 方法時，返回註冊頁面
     return render_template('register.html')
-
-
-
-
-
-#首頁(可以偵測到註冊時的姓名)
-'''
-@app.route("/frontPage")
-def front_page2():
-    id = session.get('id')  # 假設您將 Uid 存儲在 session 中
-    name = session.get('name')  # 獲取用戶名稱
-    return render_template('frontpage.html', name=name, id=id)
-'''
     
 #客人看餐廳 渲染
 @app.route("/guestfrontPage")
