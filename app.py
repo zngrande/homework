@@ -290,11 +290,13 @@ if __name__ == "__main__":
 #好冷嘎嘎ㄍ嘎嘎嘎嘎阿嘎ㄚㄚㄚㄚㄚㄚㄚ
 
 #餐廳
-@app.route("/orderlistPage")
+@app.route("/confirmreceipt")
 def order_list_page():
+    Rid = session.get('Rid')
+    #data=get_prepare_dish(Rid)
     # 取得所有的訂單資料，這裡可以進行 confirm 的過濾
-    data_confirm_0 = get_order_data(confirm=0)  # 確認接單的資料
-    data_confirm_1 = get_order_data(confirm=1)  # 已接單的資料
+    data_confirm_0 = get_order_data(0, Rid)  # 確認接單的資料
+    data_confirm_1 = get_order_data(1, Rid)  # 已接單的資料
 
     # 處理 confirm_time，加上 30 分鐘
     for rec in data_confirm_1:
@@ -302,25 +304,19 @@ def order_list_page():
         if confirm_time:
             rec['finish_time'] = (confirm_time + timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S')
 
-    return render_template('Confrimreceipt.html', data_confirm_0=data_confirm_0, data_confirm_1=data_confirm_1)
+    return render_template('Confirmreceipt.html', data_confirm_0=data_confirm_0, data_confirm_1=data_confirm_1)
 
 @app.route('/regrest')        
 def regrest():
     return render_template('regrest.html')
-    
-@app.route('/confirmreceipt')        
-def confirmreceipt():
-    Rid = session.get('Rid')
-    data=get_prepare_dish(Rid)
-    return render_template('confirmreceipt.html',data=data)
-
+'''
 @app.route("/confirmreceipt_action", methods=['POST'])
 @login_required
 def confirm_receipt_action():
     order_id = request.json.get('id')
     confirm_receipt(order_id)  # 處理確認接單操作
     return jsonify({"status": "success"}), 200  # 回傳成功訊息
-    
+ '''   
 @app.route("/confirmOrder", methods=["POST"])
 def confirm_order():
     try:
@@ -395,3 +391,14 @@ def delete_dish(dish_id):
 def before_request():
     print(f"Session at start: {session}")  # 確保會話資訊是正確的
 
+@app.route("/confirm0", methods=["POST"])
+def confirm_dish():
+    order_id = request.form.get("order_id")
+    confirm_receipt(order_id)
+    return redirect("/confirmreceipt")  # 成功後重定向回首頁
+    
+@app.route("/confirm1", methods=["POST"])
+def confirm_dish1():
+    order_id = request.form.get("order_id")
+    transfer_order(order_id)
+    return redirect("/confirmreceipt")

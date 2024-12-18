@@ -292,13 +292,12 @@ def complete_order(order_id):
 #餐廳    
 def confirm_receipt(order_id):
     try:
-        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         sql_update = """
             UPDATE prepare_dish
-            SET confirm = 1, confirm_time = %s
-            WHERE id = %s AND confirm = 0;
+            SET confirm = 1, confirm_time = NOW()
+            WHERE confirm = 0 AND order_id = %s;
         """
-        cursor.execute(sql_update, (current_time, order_id))
+        cursor.execute(sql_update, (order_id,))
         conn.commit()
     except mysql.connector.Error as e:
         conn.rollback()
@@ -307,26 +306,33 @@ def confirm_receipt(order_id):
         
 def transfer_order(order_id):
     try:
-        cursor.execute("SELECT Rid, Uid, dish_name FROM prepare_dish WHERE id = %s AND confirm = 1", (order_id,))
-        order = cursor.fetchone()
+        sql = "SELECT * FROM prepare_dish WHERE order_id = %s AND confirm = 1 ORDER BY confirm_time ASC"
+        cursor.execute(sql, (order_id,))
+        order = cursor.fetchall()
 
         if not order:
             return False, "訂單不存在"
 
-        cursor.execute(
-            "INSERT INTO orderlist (Rid, Uid, dish_name, order_time) VALUES (%s, %s, %s, NOW())",
-            (order['Rid'], order['Uid'], order['dish_name'])
-        )
-        cursor.execute("DELETE FROM prepare_dish WHERE id = %s", (order_id,))
+        for item in order:
+            Rid = item['Rid']
+            Gid = item['Gid']
+            order_idd= item['order_id']
+            
+
+        sql_insert = "INSERT INTO orderlist (Rid, Gid, order_id, finish_time) VALUES (%s, %s, %s, NOW())"
+        cursor.execute(sql_insert,(Rid, Gid, order_idd))
+
+        sql_delete = "DELETE FROM prepare_dish WHERE order_id = %s"
+        cursor.execute(sql_delete, (order_id,))
         conn.commit()
         return True, "訂單已成功轉移"
     except mysql.connector.Error as e:
         conn.rollback()
         return False, f"資料庫操作失敗: {e}"
-        
-def get_order_data(confirm):
-    sql = "SELECT * FROM prepare_dish WHERE confirm = %s;"
-    cursor.execute(sql, (confirm,))
+
+def get_order_data(confirm, Rid):
+    sql = "SELECT * FROM prepare_dish WHERE confirm = %s AND Rid=%s ;"
+    cursor.execute(sql, (confirm,Rid,))
     return [dict(row) for row in cursor.fetchall()]  # 確保返回格式一致
 
 def add_dish(restaurant_name, dish_name, price, content):
@@ -367,6 +373,11 @@ def get_dish_by_id(dish_id):
         return None
 
 def get_prepare_dish(Rid):
-    sql = "SELECT * FROM prepare_dish WHERE Rid = %s;"
+    sql = "SELECT * FROM prepare_dish WHERE Rid = %s AND confirm=0;"
+    cursor.execute(sql,(Rid,))
+    return cursor.fetchall()
+
+def get_finish_dish(Rid):
+    sql = "SELECT * FROM prepare_dish WHERE Rid = %s AND confirm=1;"
     cursor.execute(sql,(Rid,))
     return cursor.fetchall()
