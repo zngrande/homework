@@ -185,6 +185,67 @@ def send_to_restaurant():
         return "發生錯誤，請稍後再試！", 500
 
 # deliver
+# deliver
+@app.route("/deliveryfrontPage")
+@login_required
+def delivery_front_page():
+    return render_template("view_orders.html")  # 顯示可接訂單頁面，首頁
+
+# 查看待接訂單頁面
+@app.route("/delivery/orders_page")
+@login_required
+def view_orders_page():
+    return render_template("view_orders.html")  # HTML 中需建立動態表格顯示可接訂單
+
+# 查看待接訂單 API
+@app.route("/delivery/orders")
+@login_required
+def view_orders():
+    orders = get_pending_orders(status='pending')
+    return jsonify(orders)
+
+# 接單 API
+@app.route("/delivery/accept", methods=['POST'])
+@login_required
+def accept():
+    order_id = request.json.get('Oid')
+    did = session.get('id')  # 外送員 ID
+    if accept_order(order_id, did):
+        return jsonify({"message": "Order accepted."}), 200
+    return jsonify({"message": "Failed to accept order."}), 400
+
+# 查看待送訂單頁面
+@app.route("/delivery/pending_orders_page")
+@login_required
+def pending_orders_page():
+    return render_template("delivery_list.html")  # HTML 用來顯示待送清單並提供操作按鈕
+
+# 查看待送訂單 API
+@app.route("/delivery/pending")
+@login_required
+def pending_orders():
+    orders = get_pending_orders(status='accepted') + get_pending_orders(status='picked_up')
+    return jsonify(orders)
+
+# 取貨 API
+@app.route("/delivery/pickup", methods=['POST'])
+@login_required
+def pick_up():
+    order_id = request.json.get('Oid')
+    if pick_up_order(order_id):
+        return jsonify({"message": "Order picked up."}), 200
+    return jsonify({"message": "Failed to pick up order."}), 400
+
+# 送達 API
+@app.route("/delivery/complete", methods=['POST'])
+@login_required
+def complete():
+    order_id = request.form.get('Oid')
+    attachment = request.files.get('attachment')  # 處理附件
+    if complete_order(order_id):
+        return jsonify({"message": "Order completed."}), 200
+    return jsonify({"message": "Failed to complete order."}), 400
+'''
 @app.route("/delivery/orders")
 @login_required
 def view_orders():
@@ -219,10 +280,11 @@ def complete():
     if complete_order(order_id):
         return jsonify({"message": "Order completed."}), 200
     return jsonify({"message": "Failed to complete order."}), 400
-
+'''
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
     app.run(debug=True)
+    
 
 #好冷嘎嘎ㄍ嘎嘎嘎嘎阿嘎ㄚㄚㄚㄚㄚㄚㄚ
 
