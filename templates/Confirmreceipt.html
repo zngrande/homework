@@ -76,6 +76,7 @@
         <thead>
             <tr>
                 <th>餐點名稱</th>
+                <th>數量</th>
                 <th>購買人</th>
                 <th>操作</th>
             </tr>
@@ -85,7 +86,8 @@
             {% for rec in data_confirm_0 %}
             <tr id="row-{{ rec.id }}">
                 <td>{{ rec.dish_name }}</td>
-                <td>{{ rec.Uid }}</td>
+                <td>{{ rec.quantiy }}</td>
+                <td>{{ rec.customer_name }}</td>
                 <td>
                     <a class="action-link" href="javascript:void(0);" onclick="updateConfirm({{ rec.id }})">
                         確認接單
@@ -114,9 +116,9 @@
             <tr>
                 <td>{{ rec.dish_name }}</td>
                 <td>{{ rec.finish_time }}</td>
-                <td>{{ rec.Uid }}</td>
+                <td>{{ rec.Gid }}</td>
                 <td>
-                    <a class="action-link" href="javascript:void(0);" onclick="confirmOrder({{ rec.id }})">
+                    <a class="action-link" href="javascript:void(0);" onclick="confirmOrder({ rec.id })">
                         已完成
                     </a>
                 </td>
