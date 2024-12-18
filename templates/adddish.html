@@ -1,0 +1,48 @@
+<html>
+<head>
+    <meta charset="utf-8"> 
+    <title>新增餐點</title> 
+</head>
+<body>
+    <h2>新增餐點</h2> 
+    <hr /> 
+    
+    <table width="500"> 
+        <form method="POST" action="/add_dish"> 
+            <input type="text" name="name" placeholder="Dish Name" required> 
+            <input type="number" name="price" placeholder="Price" required>             
+			<textarea name="content" placeholder="content" required></textarea>
+            <button type="submit">Add dish</button> 
+        </form>
+        <tr>
+            <td>name</td>            
+			<td>price</td> 
+            <td>content</td> 
+        </tr>
+        {% for dish in dishes %} 
+        <tr>
+            <td>{{ dish.name }}</td> 
+            <td>{{ dish.price }}</td> 
+            <td>{{ dish.content }}</td> 
+            <td>
+                <a href="{{ url_for('edit_dish', dish_name=dish.dish_name) }}">edit</a> | 
+                <form action="{{ url_for('delete_item', dish_name=dish.dish_name) }}" method="POST" style="display:inline;"> 
+                    <button type="submit" onclick="return confirm('Are you sure？')">delete</button> 
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+	<a href="/confirmreceipt">確認訂單</a>
+    {% with messages = get_flashed_messages() %} <!-- 檢查是否有要顯示的消息 -->
+        {% if messages %} <!-- 如果有消息 -->
+            <ul class="flash-messages"> <!-- 創建一個列表顯示消息 -->
+                {% for message in messages %} <!-- 迭代所有消息 -->
+                    <li>{{ message }}</li> <!-- 顯示每一條消息 -->
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

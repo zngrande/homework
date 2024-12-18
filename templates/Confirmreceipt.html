@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>確認接單</title>
+    <style>
+        .logout-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 800px;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .action-link {
+            color: #007BFF;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function updateConfirm(id) {
+            // 發送 AJAX 請求來更新 confirm 欄位
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/confirmReceipt", true);  // 更新 confirm 欄位
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            // 發送的資料
+            var data = JSON.stringify({ "id": id });
+
+            // 當請求成功時
+            xhr.onload = function () {
+                if (xhr.status == 200) {
+                    alert("接單確認成功!");
+                    // 更新頁面顯示，將該訂單移到已接單區
+                    document.getElementById("row-" + id).style.display = "none";  // 隱藏該行
+                } else {
+                    alert("更新失敗，請稍後再試");
+                }
+            };
+
+            // 發送請求
+            xhr.send(data);
+        }
+    </script>
+</head>
+<body>
+    <a href="/loginPage" class="logout-button">登出</a>
+
+    <h1>確認接單</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>餐點名稱</th>
+                <th>購買人</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 顯示 confirm = 0 的資料 -->
+            {% for rec in data_confirm_0 %}
+            <tr id="row-{{ rec.id }}">
+                <td>{{ rec.dish_name }}</td>
+                <td>{{ rec.Uid }}</td>
+                <td>
+                    <a class="action-link" href="javascript:void(0);" onclick="updateConfirm({{ rec.id }})">
+                        確認接單
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr/>
+
+    <h1>已接單</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>餐點名稱</th>
+                <th>完成時間</th>
+                <th>購買人</th>
+                <th>通知取餐</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 顯示 confirm = 1 的資料 -->
+            {% for rec in data_confirm_1 %}
+            <tr>
+                <td>{{ rec.dish_name }}</td>
+                <td>{{ rec.finish_time }}</td>
+                <td>{{ rec.Uid }}</td>
+                <td>
+                    <a class="action-link" href="javascript:void(0);" onclick="confirmOrder({{ rec.id }})">
+                        已完成
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/regrest">餐廳資料</a> | 
+        <a href="/adddish">新增餐點</a>
+    </div>
+</body>
+</html>

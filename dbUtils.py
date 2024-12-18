@@ -3,6 +3,7 @@
 import mysql.connector #mariadb
 from datetime import datetime
 
+
 try:
 	#連線DB
 	conn = mysql.connector.connect(
@@ -18,7 +19,6 @@ except mysql.connector.Error as e: # mariadb.Error as e:
 	print(e)
 	print("Error connecting to DB")
 	exit(1)
-
 
 # 新增註冊者
 def add_user(id, pw, role, name, phone, address):
@@ -91,7 +91,6 @@ def get_user_by_id(id, role):
     except Exception as e:
         print(f"查詢用戶時發生錯誤: {e}")
         return None
-
 
 def get_all_restaurants():
     sql = """
@@ -288,3 +287,81 @@ def complete_order(order_id):
     except mysql.connector.Error as e:
         print(f"Error completing order: {e}")
         return False
+
+#餐廳    
+def confirm_receipt(order_id):
+    try:
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        sql_update = """
+            UPDATE prepare_dish
+            SET confirm = 1, confirm_time = %s
+            WHERE id = %s AND confirm = 0;
+        """
+        cursor.execute(sql_update, (current_time, order_id))
+        conn.commit()
+    except mysql.connector.Error as e:
+        conn.rollback()
+        print("錯誤: ", e)
+
+        
+def transfer_order(order_id):
+    try:
+        cursor.execute("SELECT Rid, Uid, dish_name FROM prepare_dish WHERE id = %s AND confirm = 1", (order_id,))
+        order = cursor.fetchone()
+
+        if not order:
+            return False, "訂單不存在"
+
+        cursor.execute(
+            "INSERT INTO orderlist (Rid, Uid, dish_name, order_time) VALUES (%s, %s, %s, NOW())",
+            (order['Rid'], order['Uid'], order['dish_name'])
+        )
+        cursor.execute("DELETE FROM prepare_dish WHERE id = %s", (order_id,))
+        conn.commit()
+        return True, "訂單已成功轉移"
+    except mysql.connector.Error as e:
+        conn.rollback()
+        return False, f"資料庫操作失敗: {e}"
+        
+def get_order_data(confirm):
+    sql = "SELECT * FROM prepare_dish WHERE confirm = %s;"
+    cursor.execute(sql, (confirm,))
+    return [dict(row) for row in cursor.fetchall()]  # 確保返回格式一致
+
+def add_dish(restaurant_name, dish_name, price, content):
+    sql = "INSERT INTO dish (restaurant_name, dish_name, price, content) VALUES (%s, %s, %s, %s)"
+    param = (restaurant_name, dish_name, price, content)
+    cursor.execute(sql, param)
+    dish_id = cursor.lastrowid  # 取得新增商品的 ID
+    conn.commit()  # 提交變更
+
+def update_dish(dish_id, dish_name, price, content):
+    cursor.execute("UPDATE dish SET dish_name = %s, price = %s, content = %s WHERE id = %s", (dish_name, price, content, dish_id))
+    conn.commit()
+
+
+def delete_dish_by_id(dish_id):   
+    cursor.execute("DELETE FROM dish WHERE id = %s", (dish_id,))
+    conn.commit()
+
+def get_dish_by_id(dish_id):
+    """
+    根據菜品 ID 查詢菜品詳細資訊
+    :param dish_id: 菜品 ID
+    :return: 查詢到的菜品資訊字典，若查無資料則返回 None
+    """
+    try:
+        # 執行 SQL 查詢
+        sql = "SELECT * FROM dish WHERE id = %s;"
+        cursor.execute(sql, (dish_id,))
+        # 獲取結果
+        dish = cursor.fetchone()
+        if dish:
+            return dish
+        else:
+            print(f"未找到對應的菜品 (ID: {dish_id})")
+            return None
+    except mysql.connector.Error as e:
+        print("查詢菜品時發生錯誤:", e)
+        return None
+
