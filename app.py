@@ -57,6 +57,7 @@ def login():
                 session['Gid'] = user['Gid']
                 return redirect("/guestfrontPage")
             elif role == "restaurant":
+                session['Rid'] = user['Rid']
                 return redirect("/confirmreceipt")
             elif role == "delivery":
                 return redirect("/view_orders")
@@ -309,7 +310,8 @@ def regrest():
     
 @app.route('/confirmreceipt')        
 def confirmreceipt():
-    data=get_prepare_dish()
+    Rid = session.get('Rid')
+    data=get_prepare_dish(Rid)
     return render_template('confirmreceipt.html',data=data)
 
 @app.route("/confirmreceipt_action", methods=['POST'])

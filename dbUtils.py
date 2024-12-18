@@ -366,7 +366,7 @@ def get_dish_by_id(dish_id):
         print("查詢菜品時發生錯誤:", e)
         return None
 
-def get_prepare_dish():
-    sql = "SELECT * FROM prepare_dish;"
-    cursor.execute(sql)
+def get_prepare_dish(Rid):
+    sql = "SELECT * FROM prepare_dish WHERE Rid = %s;"
+    cursor.execute(sql,(Rid,))
     return cursor.fetchall()
