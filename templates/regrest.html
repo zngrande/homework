@@ -9,13 +9,13 @@
     <hr />
     <form method="post">
         <label>餐廳名稱:</label>
-        <input name="name" type="text" placeholder="name" required /> <br>
+        <input name="name" type="text" value="{{ data.name }}" required /> <br>
 		
         <label>餐廳地址:</label>
-        <input name="address" type="text" placeholder="address" required /> <br>
+        <input name="address" type="text" value="{{ data.address }}" required /> <br>
 
 		<label>餐廳電話:</label>
-        <input name="phone" type="number" placeholder="phone" required /> <br>
+        <input name="phone" type="number" value="{{ data.phone }}" required /> <br>
 		
         <button type="submit" onclick="return confirm('確定要儲存修改嗎？')">儲存修改</button>
     </form>

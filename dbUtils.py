@@ -337,42 +337,39 @@ def get_order_data(confirm, Rid):
     cursor.execute(sql, (confirm,Rid,))
     return [dict(row) for row in cursor.fetchall()]  # 確保返回格式一致
 
-def add_dish(restaurant_name, dish_name, price, content):
-    sql = "INSERT INTO dish (restaurant_name, dish_name, price, content) VALUES (%s, %s, %s, %s)"
-    param = (restaurant_name, dish_name, price, content)
+def add_dish(Rid, restaurant_name, dish_name, price, content):
+    # 獲取最大 dish_id
+    cursor.execute("SELECT MAX(dish_id) AS max_dishid FROM dish;")
+    result = cursor.fetchone()
+    new_dishid = (result['max_dishid'] + 1) if result['max_dishid'] is not None else 1
+    
+    # 插入新餐點
+    sql = """
+        INSERT INTO dish (dish_id, Rid, restaurant_name, dish_name, price, content)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    param = (new_dishid, Rid, restaurant_name, dish_name, price, content)
     cursor.execute(sql, param)
-    dish_id = cursor.lastrowid  # 取得新增商品的 ID
-    conn.commit()  # 提交變更
+    conn.commit()
+
 
 def update_dish(dish_id, dish_name, price, content):
-    cursor.execute("UPDATE dish SET dish_name = %s, price = %s, content = %s WHERE id = %s", (dish_name, price, content, dish_id))
+    cursor.execute("UPDATE dish SET dish_name = %s, price = %s, content = %s WHERE dish_id = %s", (dish_name, price, content, dish_id))
     conn.commit()
-
 
 def delete_dish_by_id(dish_id):   
-    cursor.execute("DELETE FROM dish WHERE id = %s", (dish_id,))
+    cursor.execute("DELETE FROM dish WHERE dish_id = %s", (dish_id,))
     conn.commit()
 
+def get_dish_by_Rid(Rid):
+    sql = "SELECT * FROM dish WHERE Rid = %s ;"
+    cursor.execute(sql,(Rid,))
+    return cursor.fetchall()
 def get_dish_by_id(dish_id):
-    """
-    根據菜品 ID 查詢菜品詳細資訊
-    :param dish_id: 菜品 ID
-    :return: 查詢到的菜品資訊字典，若查無資料則返回 None
-    """
-    try:
-        # 執行 SQL 查詢
-        sql = "SELECT * FROM dish WHERE id = %s;"
-        cursor.execute(sql, (dish_id,))
-        # 獲取結果
-        dish = cursor.fetchone()
-        if dish:
-            return dish
-        else:
-            print(f"未找到對應的菜品 (ID: {dish_id})")
-            return None
-    except mysql.connector.Error as e:
-        print("查詢菜品時發生錯誤:", e)
-        return None
+    sql = "SELECT * FROM dish WHERE dish_id = %s"
+    cursor.execute(sql, (dish_id,))
+    return cursor.fetchone()  # 返回單筆資料
+
 
 def get_prepare_dish(Rid):
     sql = "SELECT * FROM prepare_dish WHERE Rid = %s AND confirm=0;"
@@ -381,5 +378,9 @@ def get_prepare_dish(Rid):
 
 def get_finish_dish(Rid):
     sql = "SELECT * FROM prepare_dish WHERE Rid = %s AND confirm=1;"
+    cursor.execute(sql,(Rid,))
+    return cursor.fetchall()
+def get_res_by_Rid(Rid):
+    sql = "SELECT * FROM restaurant WHERE Rid = %s;"
     cursor.execute(sql,(Rid,))
     return cursor.fetchall()

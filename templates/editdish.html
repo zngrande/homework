@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>編輯餐點</title>
+</head>
+<body>
+    <p>編輯餐點</p>
+    <hr />
+    <!-- 確認 action 指向 /editproducts/<Pid> 並使用 POST 方法 -->
+        <form method="post" action="/editdish/{{ data.dish_id }}">
+            <label>名稱:</label>
+            <input name="dish_name" type="text" value="{{ data.dish_name }}" required /> <br>
+            
+            <label>價錢:</label>
+            <input name="price" type="text" value="{{ data.price }}" required /> <br>
+        
+            <label>內容:</label>
+            <input name="content" type="text" value="{{ data.content }}" required /> <br>
+        
+            <button type="submit" onclick="return confirm('確定要儲存修改嗎？')">儲存修改</button>
+        </form>
+        
+
+    <a href="/confirmreceipt">回到首頁</a>
+</body>
+</html>
