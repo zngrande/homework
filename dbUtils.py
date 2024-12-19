@@ -305,6 +305,8 @@ def confirm_receipt(order_id):
 
         
 def transfer_order(order_id):
+
+    print(order_id)
     try:
         sql = "SELECT * FROM prepare_dish WHERE order_id = %s AND confirm = 1 ORDER BY confirm_time ASC"
         cursor.execute(sql, (order_id,))

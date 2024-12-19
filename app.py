@@ -126,7 +126,7 @@ def dish_records(name):
 
 # 新增或更新購物車
 @app.route('/place_dishes', methods=['POST'])
-def place_dishes():
+def dishes():
     dish_name = request.form.get('dish_name')
     quantity = request.form.get('quantity')  # 使用 get() 防止 KeyError
 
