@@ -188,16 +188,15 @@ def send_to_restaurant():
 
 # deliver
 # deliver
-@app.route("/deliveryfrontPage")
-@login_required
-def delivery_front_page():
-    return render_template("view_orders.html")  # 顯示可接訂單頁面，首頁
-
-# 查看待接訂單頁面
-@app.route("/delivery/orders_page")
+@app.route("/view_orders")
 @login_required
 def view_orders_page():
-    return render_template("view_orders.html")  # HTML 中需建立動態表格顯示可接訂單
+    return render_template("view_orders.html")
+
+@app.route("/delivery_list")
+@login_required
+def delivery_list_page():
+    return render_template("delivery_list.html")
 
 # 查看待接訂單 API
 @app.route("/delivery/orders")

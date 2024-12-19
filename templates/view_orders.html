@@ -1,51 +1,62 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>查看可接訂單</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>View Orders</title>
 </head>
 <body>
-    <h1>查看可接訂單</h1>
-    <div id="order-list">
-        <!-- 訂單清單將在此顯示 -->
-    </div>
+    <h1>可接訂單</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>送達地址</th>
+                <th>金額</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="orders-table">
+            <!-- JS will dynamically populate rows -->
+        </tbody>
+    </table>
     <script>
-        // 加載訂單
-        function loadOrders() {
-            $.get('/delivery/orders', function(data) {
-                let html = '';
-                data.forEach(order => {
-                    html += `
-                        <div>
-                            <p>訂單編號：${order.Oid}</p>
-                            <button onclick="acceptOrder(${order.Oid})">接單</button>
-                        </div>
-                    `;
-                });
-                $('#order-list').html(html);
+        async function fetchOrders() {
+            const response = await fetch('/delivery/orders');
+            const orders = await response.json();
+            const table = document.getElementById('orders-table');
+            table.innerHTML = '';
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.Oid}</td>
+                    <td>${order.restaurant_name}</td>
+                    <td>${order.delivery_address}</td>
+                    <td>${order.amount}</td>
+                    <td><button onclick="acceptOrder(${order.Oid})">接單</button></td>
+                `;
+                table.appendChild(row);
             });
         }
 
-        // 接單功能
-        function acceptOrder(orderId) {
-            $.ajax({
-                url: '/delivery/accept',
+        async function acceptOrder(orderId) {
+            const response = await fetch('/delivery/accept', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ Oid: orderId }),
-                success: function(response) {
-                    alert(response.message);
-                    loadOrders();
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                error: function(response) {
-                    alert('接單失敗：' + response.responseJSON.message);
-                }
+                body: JSON.stringify({ Oid: orderId })
             });
+            if (response.ok) {
+                alert('接單成功！');
+                fetchOrders();
+            } else {
+                alert('接單失敗！');
+            }
         }
 
-        $(document).ready(loadOrders);
+        fetchOrders();
     </script>
 </body>
 </html>
