@@ -24,14 +24,14 @@
     </table>
     <script>
         async function fetchDeliveries() {
-            const response = await fetch('/delivery/list');
+            const response = await fetch('/delivery/pending');
             const deliveries = await response.json();
             const table = document.getElementById('delivery-table');
             table.innerHTML = '';
             deliveries.forEach(delivery => {
-                const row = document.createElement('tr');
-                const buttonLabel = delivery.status === '待取貨' ? '取貨' : '送達';
-                const action = delivery.status === '待取貨' ? `pickupOrder(${delivery.Oid})` : `deliverOrder(${delivery.Oid})`;
+                const buttonLabel = delivery.status === 'accepted' ? '取貨' : '送達';
+                const action = delivery.status === 'accepted' ? `pickupOrder(${delivery.Oid})` : `deliverOrder(${delivery.Oid})`;
+                const attachmentInput = delivery.status === '送達中' ? `<input type="file" id="attachment-${delivery.Oid}">` : '';
                 row.innerHTML = `
                     <td>${delivery.Oid}</td>
                     <td>${delivery.restaurant_name}</td>
@@ -40,7 +40,7 @@
                     <td>${delivery.status}</td>
                     <td>
                         <button onclick="${action}">${buttonLabel}</button>
-                        ${delivery.status === '送達中' ? '<input type="file" id="attachment-' + delivery.Oid + '">' : ''}
+                        ${attachmentInput}
                     </td>
                 `;
                 table.appendChild(row);
@@ -57,7 +57,7 @@
             });
             if (response.ok) {
                 alert('取貨成功！');
-                fetchDeliveries();
+                fetchDeliveries(); // 刷新待送清單
             } else {
                 alert('取貨失敗！');
             }
@@ -74,14 +74,14 @@
             formData.append('Oid', orderId);
             formData.append('attachment', attachment);
 
-            const response = await fetch('/delivery/deliver', {
+            const response = await fetch('/delivery/complete', {
                 method: 'POST',
                 body: formData
             });
 
             if (response.ok) {
                 alert('送達成功！');
-                fetchDeliveries();
+                fetchDeliveries(); // 刷新待送清單
             } else {
                 alert('送達失敗！');
             }

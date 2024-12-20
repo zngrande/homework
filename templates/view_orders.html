@@ -21,41 +21,63 @@
             <!-- JS will dynamically populate rows -->
         </tbody>
     </table>
-    <script>
-        async function fetchOrders() {
-            const response = await fetch('/delivery/orders');
-            const orders = await response.json();
-            const table = document.getElementById('orders-table');
-            table.innerHTML = '';
-            orders.forEach(order => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${order.Oid}</td>
-                    <td>${order.restaurant_name}</td>
-                    <td>${order.delivery_address}</td>
-                    <td>${order.amount}</td>
-                    <td><button onclick="acceptOrder(${order.Oid})">接單</button></td>
-                `;
-                table.appendChild(row);
-            });
-        }
 
-        async function acceptOrder(orderId) {
-            const response = await fetch('/delivery/accept', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ Oid: orderId })
-            });
-            if (response.ok) {
-                alert('接單成功！');
-                fetchOrders();
-            } else {
-                alert('接單失敗！');
+    <script>
+        // 使用 async 函式來獲取待接訂單資料
+        async function fetchOrders() {
+            try {
+                // 從後端 API 獲取待接訂單資料
+                const response = await fetch('/delivery/orders');
+                if (response.ok) {
+                    const orders = await response.json();  // 解析 JSON 資料
+                    const table = document.getElementById('orders-table');
+                    table.innerHTML = '';  // 清空表格
+
+                    // 遍歷每個訂單並動態創建表格行
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${order.order_id}</td>
+                            <td>${order.restaurant_name}</td>
+                            <td>${order.delivery_address}</td>
+                            <td>${order.amount}</td>
+                            <td><button onclick="acceptOrder(${order.order_id})">接單</button></td>
+                        `;
+                        table.appendChild(row);
+                    });
+                } else {
+                    alert('無法獲取訂單資料');
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                alert('獲取訂單資料時出現錯誤');
             }
         }
 
+        // 接單操作
+        async function acceptOrder(orderId) {
+            try {
+                const response = await fetch('/delivery/accept', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ Oid: orderId })  // 發送訂單 ID
+                });
+
+                if (response.ok) {
+                    alert('接單成功！');
+                    fetchOrders();  // 重新獲取待接訂單資料，更新頁面
+                } else {
+                    alert('接單失敗！');
+                }
+            } catch (error) {
+                console.error('Error accepting order:', error);
+                alert('接單過程中出現錯誤');
+            }
+        }
+
+        // 頁面加載時自動獲取待接訂單
         fetchOrders();
     </script>
 </body>

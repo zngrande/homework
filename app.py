@@ -198,7 +198,7 @@ def view_orders_page():
 def delivery_list_page():
     return render_template("delivery_list.html")
 
-# 查看待接訂單 API
+# 查看可接訂單 API
 @app.route("/delivery/orders")
 @login_required
 def view_orders():
@@ -214,12 +214,6 @@ def accept():
     if accept_order(order_id, did):
         return jsonify({"message": "Order accepted."}), 200
     return jsonify({"message": "Failed to accept order."}), 400
-
-# 查看待送訂單頁面
-@app.route("/delivery/pending_orders_page")
-@login_required
-def pending_orders_page():
-    return render_template("delivery_list.html")  # HTML 用來顯示待送清單並提供操作按鈕
 
 # 查看待送訂單 API
 @app.route("/delivery/pending")
@@ -243,7 +237,7 @@ def pick_up():
 def complete():
     order_id = request.form.get('Oid')
     attachment = request.files.get('attachment')  # 處理附件
-    if complete_order(order_id):
+    if complete_order(order_id, attachment):
         return jsonify({"message": "Order completed."}), 200
     return jsonify({"message": "Failed to complete order."}), 400
 '''
