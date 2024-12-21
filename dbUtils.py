@@ -251,7 +251,47 @@ def send_dish(Gid):
         return "資料庫錯誤，請稍後再試！", 500
     
 #deliver
+def get_db_connection():
+    """建立並返回一個資料庫連接。"""
+    conn = sqlite3.connect('your_database.db')  # 修改為你的資料庫名稱
+    conn.row_factory = sqlite3.Row  # 返回字典風格的行
+    return conn
 
+def get_pending_orders():
+    """從資料庫獲取待接訂單。"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT order_id, Rid, Gid, Did, status, delivery_time, pickup_time, finish_time
+        FROM orderlist
+        WHERE status = 'pending' AND Did IS NULL
+    """)
+    orders = [
+        {
+            "order_id": row[0],
+            "restaurant_name": f"餐廳 {row[1]}",  # 示例：將 Rid 映射為餐廳名稱
+            "delivery_address": "地址未提供",  # 修改為實際地址來源
+            "amount": 100  # 修改為真實金額來源
+        }
+        for row in cursor.fetchall()
+    ]
+    conn.close()
+    return orders
+
+def accept_order(order_id, delivery_id):
+    """更新資料庫以接取指定訂單。"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE orderlist
+            SET Did = ?, status = 'accepted'
+            WHERE order_id = ? AND Did IS NULL
+        """, (delivery_id, order_id))
+        conn.commit()
+        return cursor.rowcount > 0  # 返回是否更新成功
+    finally:
+        conn.close()
 # 獲取待處理訂單
 def get_pending_orders(status=None):
     try:

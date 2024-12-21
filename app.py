@@ -188,6 +188,48 @@ def send_to_restaurant():
 
 # deliver
 # deliver
+@app.route('/register', methods=['POST'])
+def register_user():
+    data = request.json
+    try:
+        add_user(
+            id=data['id'], pw=data['pw'], role=data['role'], 
+            name=data['name'], phone=data['phone'], address=data['address']
+        )
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/restaurants', methods=['GET'])
+def fetch_restaurants():
+    try:
+        restaurants = get_all_restaurants()
+        return jsonify(restaurants), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/cart', methods=['POST'])
+def update_cart():
+    data = request.json
+    try:
+        add_to_cart(
+            dish_name=data['dish_name'], price=data['price'], 
+            restaurant_name=data['restaurant_name'], quantity=data['quantity'], 
+            Gid=data['Gid']
+        )
+        return jsonify({"message": "Cart updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/order', methods=['POST'])
+def submit_order():
+    data = request.json
+    try:
+        response, status = send_dish(data['Gid'])
+        return jsonify({"message": response}), status
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+''''''
 @app.route("/view_orders")
 @login_required
 def view_orders_page():
