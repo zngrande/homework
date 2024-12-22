@@ -1,51 +1,106 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="查看可接訂單，並進行接單操作的管理頁面">
     <title>查看可接訂單</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
-    <h1>查看可接訂單</h1>
-    <div id="order-list">
-        <!-- 訂單清單將在此顯示 -->
-    </div>
+    <h1>可接訂單</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <!--<th>餐廳名稱</th>
+                <th>送達地址</th>
+                <th>金額</th> -->
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="orders-table">
+            <!-- JS 動態填充 -->
+        </tbody>
+    </table>
+
     <script>
-        // 加載訂單
-        function loadOrders() {
-            $.get('/delivery/orders', function(data) {
-                let html = '';
-                data.forEach(order => {
-                    html += `
-                        <div>
-                            <p>訂單編號：${order.Oid}</p>
-                            <button onclick="acceptOrder(${order.Oid})">接單</button>
-                        </div>
-                    `;
-                });
-                $('#order-list').html(html);
-            });
-        }
-
-        // 接單功能
-        function acceptOrder(orderId) {
-            $.ajax({
-                url: '/delivery/accept',
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ Oid: orderId }),
-                success: function(response) {
-                    alert(response.message);
-                    loadOrders();
-                },
-                error: function(response) {
-                    alert('接單失敗：' + response.responseJSON.message);
+        async function fetchOrders() {
+            try {
+                const response = await fetch('/delivery/orders');
+                if (response.ok) {
+                    const orders = await response.json();
+                    const table = document.getElementById('orders-table');
+                    table.innerHTML = '';
+                    if (orders.length === 0) {
+                        table.innerHTML = '<tr><td colspan="5">目前沒有可接訂單</td></tr>';
+                        return;
+                    }
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${order.order_id}</td>
+                            
+                            <td>
+                                <button onclick="acceptOrder(${order.order_id})">接單</button>
+                            </td>
+                        `;
+                        table.appendChild(row);
+                    });
+                } else {
+                    alert('無法獲取訂單資料');
                 }
-            });
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+            }
         }
 
-        $(document).ready(loadOrders);
+        async function acceptOrder(orderId) {
+            try {
+                const response = await fetch('/delivery/accept', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Oid: orderId })
+                });
+                if (response.ok) {
+                    alert('接單成功！');
+                    fetchOrders();
+                } else {
+                    alert('接單失敗！');
+                }
+            } catch (error) {
+                console.error('Error accepting order:', error);
+            }
+        }
+
+        fetchOrders();
     </script>
 </body>
 </html>

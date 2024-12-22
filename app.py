@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect,jsonify, url_for, flash
 import sqlite3
 from functools import wraps
-from dbUtils import get_pending_orders, accept_order, pick_up_order, get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
+from dbUtils import get_pending_orders, update_res_information, accept_order, pick_up_order, get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
 from datetime import datetime, timedelta
 
 # creates a Flask application, specify a static folder on /
@@ -187,28 +187,24 @@ def send_to_restaurant():
         return "發生錯誤，請稍後再試！", 500
 
 # deliver
-# deliver
-@app.route("/deliveryfrontPage")
-@login_required
-def delivery_front_page():
-    return render_template("view_orders.html")  # 顯示可接訂單頁面，首頁
-
-# 查看待接訂單頁面
-@app.route("/delivery/orders_page")
-@login_required
+# 查看可接訂單頁面
+@app.route("/view_orders")
 def view_orders_page():
-    return render_template("view_orders.html")  # HTML 中需建立動態表格顯示可接訂單
+    return render_template("view_orders.html")
 
-# 查看待接訂單 API
-@app.route("/delivery/orders")
-@login_required
-def view_orders():
-    orders = get_pending_orders(status='pending')
+# 查看待送清單頁面
+@app.route("/delivery_list")
+def delivery_list_page():
+    return render_template("delivery_list.html")
+
+# 查看可接訂單 API
+@app.route("/delivery/orders", methods=['GET'])
+def get_view_orders():
+    orders = get_pending_orders(status='待接單')  # 餐廳完成的訂單
     return jsonify(orders)
 
 # 接單 API
 @app.route("/delivery/accept", methods=['POST'])
-@login_required
 def accept():
     order_id = request.json.get('Oid')
     did = session.get('id')  # 外送員 ID
@@ -216,22 +212,14 @@ def accept():
         return jsonify({"message": "Order accepted."}), 200
     return jsonify({"message": "Failed to accept order."}), 400
 
-# 查看待送訂單頁面
-@app.route("/delivery/pending_orders_page")
-@login_required
-def pending_orders_page():
-    return render_template("delivery_list.html")  # HTML 用來顯示待送清單並提供操作按鈕
-
 # 查看待送訂單 API
-@app.route("/delivery/pending")
-@login_required
-def pending_orders():
-    orders = get_pending_orders(status='accepted') + get_pending_orders(status='picked_up')
+@app.route("/delivery/pending", methods=['GET'])
+def get_pending_orders_list():
+    orders = get_pending_orders(status='待接單')
     return jsonify(orders)
 
 # 取貨 API
 @app.route("/delivery/pickup", methods=['POST'])
-@login_required
 def pick_up():
     order_id = request.json.get('Oid')
     if pick_up_order(order_id):
@@ -240,49 +228,12 @@ def pick_up():
 
 # 送達 API
 @app.route("/delivery/complete", methods=['POST'])
-@login_required
 def complete():
     order_id = request.form.get('Oid')
-    attachment = request.files.get('attachment')  # 處理附件
-    if complete_order(order_id):
+    attachment = request.files.get('attachment')
+    if complete_order(order_id, attachment):
         return jsonify({"message": "Order completed."}), 200
     return jsonify({"message": "Failed to complete order."}), 400
-'''
-@app.route("/delivery/orders")
-@login_required
-def view_orders():
-#1查看待送訂單
-    orders = get_pending_orders()
-    return jsonify(orders)
-
-@app.route("/delivery/accept", methods=['POST'])
-@login_required
-def accept():
-#2接單
-    order_id = request.json.get('Oid')
-    did = session.get('Did')
-    if accept_order(order_id, did):
-        return jsonify({"message": "Order accepted."}), 200
-    return jsonify({"message": "Failed to accept order."}), 400
-
-@app.route("/delivery/pickup", methods=['POST'])
-@login_required
-def pick_up():
-#3取貨
-    order_id = request.json.get('Oid')
-    if pick_up_order(order_id):
-        return jsonify({"message": "Order picked up."}), 200
-    return jsonify({"message": "Failed to pick up order."}), 400
-
-@app.route("/delivery/complete", methods=['POST'])
-@login_required
-def complete():
-#4送達
-    order_id = request.json.get('Oid')
-    if complete_order(order_id):
-        return jsonify({"message": "Order completed."}), 200
-    return jsonify({"message": "Failed to complete order."}), 400
-'''
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
     app.run(debug=True)
@@ -306,11 +257,6 @@ def order_list_page():
 
     return render_template('Confirmreceipt.html', data_confirm_0=data_confirm_0, data_confirm_1=data_confirm_1)
 
-@app.route('/regrest')        
-def regrest():
-    Rid=session.get('Rid')
-    data=get_res_by_Rid(Rid)
-    return render_template('regrest.html',data=data)
 '''
 @app.route("/confirmreceipt_action", methods=['POST'])
 @login_required
@@ -379,8 +325,24 @@ def edit_dish():
     data=get_dish_by_Rid(Rid)
     return render_template('dish_list.html',data=data)
 
+#修改餐廳資料
+@app.route("/regrest", methods=['GET', 'POST'])    
+def regrest():
+    Rid = session.get('Rid')
+    data=get_res_by_Rid(Rid)
+    
+    if request.method == 'POST':
+        form = request.form
+        name = form['name']
+        address = form['address']
+        phone = form['phone']
+
+        update_res_information(name, address, phone, Rid)
+        return redirect("/confirmreceipt")
+    return render_template('regrest.html',data=data)
+
 # 修改餐點
-@app.route("/editdish/<int:dish_id>", methods=['GET', 'POST'])
+@app.route("/editdish", methods=['GET', 'POST'])
 def edit_product(dish_id):  
     if request.method == 'POST':
         # 取得表單數據並更新產品
