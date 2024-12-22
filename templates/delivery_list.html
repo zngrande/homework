@@ -1,85 +1,93 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>待送清單</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Delivery List</title>
 </head>
 <body>
     <h1>待送清單</h1>
-    <div id="order-list">
-        <!-- 待送訂單將在此顯示 -->
-    </div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>送達地址</th>
+                <th>金額</th>
+                <th>狀態</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="delivery-table">
+            <!-- JS will dynamically populate rows -->
+        </tbody>
+    </table>
     <script>
-        // 加載待送清單
-        function loadOrders() {
-            $.get('/delivery/pending_orders', function(data) {
-                let html = '';
-                data.forEach(order => {
-                    if (order.status === 'accepted') {
-                        html += `
-                            <div>
-                                <p>訂單編號：${order.Oid}</p>
-                                <button onclick="pickUpOrder(${order.Oid})">取貨</button>
-                            </div>
-                        `;
-                    } else if (order.status === 'picked_up') {
-                        html += `
-                            <div>
-                                <p>訂單編號：${order.Oid}</p>
-                                <form onsubmit="completeOrder(event, ${order.Oid})">
-                                    <input type="file" name="attachment" required>
-                                    <button type="submit">送達</button>
-                                </form>
-                            </div>
-                        `;
-                    }
-                });
-                $('#order-list').html(html);
+        async function fetchDeliveries() {
+            const response = await fetch('/delivery/pending');
+            const deliveries = await response.json();
+            const table = document.getElementById('delivery-table');
+            table.innerHTML = '';
+            deliveries.forEach(delivery => {
+                const buttonLabel = delivery.status === 'accepted' ? '取貨' : '送達';
+                const action = delivery.status === 'accepted' ? `pickupOrder(${delivery.Oid})` : `deliverOrder(${delivery.Oid})`;
+                const attachmentInput = delivery.status === '送達中' ? `<input type="file" id="attachment-${delivery.Oid}">` : '';
+                row.innerHTML = `
+                    <td>${delivery.Oid}</td>
+                    <td>${delivery.restaurant_name}</td>
+                    <td>${delivery.delivery_address}</td>
+                    <td>${delivery.amount}</td>
+                    <td>${delivery.status}</td>
+                    <td>
+                        <button onclick="${action}">${buttonLabel}</button>
+                        ${attachmentInput}
+                    </td>
+                `;
+                table.appendChild(row);
             });
         }
 
-        // 取貨功能
-        function pickUpOrder(orderId) {
-            $.ajax({
-                url: '/delivery/pickup',
+        async function pickupOrder(orderId) {
+            const response = await fetch('/delivery/pickup', {
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ Oid: orderId }),
-                success: function(response) {
-                    alert(response.message);
-                    loadOrders();
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                error: function(response) {
-                    alert('取貨失敗：' + response.responseJSON.message);
-                }
+                body: JSON.stringify({ Oid: orderId })
             });
+            if (response.ok) {
+                alert('取貨成功！');
+                fetchDeliveries(); // 刷新待送清單
+            } else {
+                alert('取貨失敗！');
+            }
         }
 
-        // 送達功能
-        function completeOrder(event, orderId) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
+        async function deliverOrder(orderId) {
+            const attachment = document.getElementById(`attachment-${orderId}`).files[0];
+            if (!attachment) {
+                alert('請附上送達憑證！');
+                return;
+            }
+
+            const formData = new FormData();
             formData.append('Oid', orderId);
+            formData.append('attachment', attachment);
 
-            $.ajax({
-                url: '/delivery/complete',
+            const response = await fetch('/delivery/complete', {
                 method: 'POST',
-                processData: false,
-                contentType: false,
-                data: formData,
-                success: function(response) {
-                    alert(response.message);
-                    loadOrders();
-                },
-                error: function(response) {
-                    alert('送達失敗：' + response.responseJSON.message);
-                }
+                body: formData
             });
+
+            if (response.ok) {
+                alert('送達成功！');
+                fetchDeliveries(); // 刷新待送清單
+            } else {
+                alert('送達失敗！');
+            }
         }
 
-        $(document).ready(loadOrders);
+        fetchDeliveries();
     </script>
 </body>
 </html>

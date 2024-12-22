@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__, static_folder='static', static_url_path='/')
 # set a secret key to hash cookies
 app.config['SECRET_KEY'] = '123TyU%^&'
-
+#123
 
 # define a function wrapper to check login session
 def login_required(f):
@@ -188,7 +188,11 @@ def send_to_restaurant():
 
 # deliver
 # 查看可接訂單頁面
+<<<<<<< HEAD
 @app.route("/view_orders")
+=======
+'''@app.route("/view_orders")
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
 def view_orders_page():
     return render_template("view_orders.html")
 
@@ -200,7 +204,11 @@ def delivery_list_page():
 # 查看可接訂單 API
 @app.route("/delivery/orders", methods=['GET'])
 def get_view_orders():
+<<<<<<< HEAD
     orders = get_pending_orders(status='待接單')  # 餐廳完成的訂單
+=======
+    orders = get_pending_orders(status='completed')  # 餐廳完成的訂單
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
     return jsonify(orders)
 
 # 接單 API
@@ -215,7 +223,51 @@ def accept():
 # 查看待送訂單 API
 @app.route("/delivery/pending", methods=['GET'])
 def get_pending_orders_list():
+<<<<<<< HEAD
     orders = get_pending_orders(status='待接單')
+=======
+    orders = get_pending_orders(status='accepted') + get_pending_orders(status='picked_up')
+    return jsonify(orders)
+
+# 取貨 API
+@app.route("/delivery/pickup", methods=['POST'])
+def pick_up():
+    order_id = request.json.get('Oid')
+    if pick_up_order(order_id):
+        return jsonify({"message": "Order picked up."}), 200
+    return jsonify({"message": "Failed to pick up order."}), 400
+
+# 送達 API
+# 查看可接訂單頁面
+@app.route("/view_orders")
+def view_orders_page():
+    return render_template("view_orders.html")
+
+# 查看待送清單頁面
+@app.route("/delivery_list")
+def delivery_list_page():
+    return render_template("delivery_list.html")
+
+# 查看可接訂單 API
+@app.route("/delivery/orders", methods=['GET'])
+def get_view_orders():
+    orders = get_pending_orders(status='completed')  # 餐廳完成的訂單
+    return jsonify(orders)
+
+# 接單 API
+@app.route("/delivery/accept", methods=['POST'])
+def accept():
+    order_id = request.json.get('Oid')
+    did = session.get('id')  # 外送員 ID
+    if accept_order(order_id, did):
+        return jsonify({"message": "Order accepted."}), 200
+    return jsonify({"message": "Failed to accept order."}), 400
+
+# 查看待送訂單 API
+@app.route("/delivery/pending", methods=['GET'])
+def get_pending_orders_list():
+    orders = get_pending_orders(status='accepted') + get_pending_orders(status='picked_up')
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
     return jsonify(orders)
 
 # 取貨 API
@@ -233,13 +285,16 @@ def complete():
     attachment = request.files.get('attachment')
     if complete_order(order_id, attachment):
         return jsonify({"message": "Order completed."}), 200
+<<<<<<< HEAD
     return jsonify({"message": "Failed to complete order."}), 400
+=======
+    return jsonify({"message": "Failed to complete order."}), 400'''
+
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
     app.run(debug=True)
     
-
-#好冷嘎嘎ㄍ嘎嘎嘎嘎阿嘎ㄚㄚㄚㄚㄚㄚㄚ
 
 #餐廳
 @app.route("/confirmreceipt")

@@ -251,6 +251,7 @@ def send_dish(Gid):
         return "資料庫錯誤，請稍後再試！", 500
     
 #deliver
+<<<<<<< HEAD
 # 獲取待接訂單
 def get_pending_orders(status):
     try:
@@ -286,31 +287,72 @@ def accept_order(order_id, did):
             WHERE order_id = %s AND status = '待接單'
         """
         cursor.execute(query, (did, order_id))
+=======
+'''def get_pending_orders(status=None):
+    try:
+        if status:
+            cursor.execute("SELECT * FROM orderlist WHERE status = %s;", (status,))
+        else:
+            cursor.execute("SELECT * FROM orderlist;")
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(f"Error fetching orders: {e}")
+        return []
+
+def accept_order(order_id, did):
+    try:
+        cursor.execute(
+            "UPDATE orderlist SET status = 'accepted', Did = %s WHERE order_id = %s AND status = 'completed';",
+            (did, order_id)
+        )
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
         conn.commit()
         return cursor.rowcount > 0
     except mysql.connector.Error as e:
         print(f"Error accepting order: {e}")
         return False
+<<<<<<< HEAD
         return False
 #取貨
+=======
+
+
+# 取貨
+>>>>>>> 87b1ba5d345f7f89a49018b0e7f7035592175a03
 def pick_up_order(order_id):
     try:
-        cursor.execute("UPDATE orderlist SET status = 'picked_up', pickup_time = %s WHERE order_id = %s AND status = 'accepted';", (datetime.now(), order_id))
+        cursor.execute(
+            "UPDATE orderlist SET status = 'picked_up', pickup_time = %s WHERE order_id = %s AND status = 'accepted';",
+            (datetime.now(), order_id),
+        )
         conn.commit()
         return cursor.rowcount > 0
     except mysql.connector.Error as e:
         print(f"Error picking up order: {e}")
         return False
 
-#送達
-def complete_order(order_id):
+# 送達
+def complete_order(order_id, attachment):
     try:
-        cursor.execute("UPDATE orderlist SET status = 'completed', delivery_time = %s WHERE order_id = %s AND status = 'picked_up';", (datetime.now(), order_id))
+        # 處理附件並保存
+        if attachment and allowed_file(attachment.filename):
+            filename = f"{order_id}_{attachment.filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            attachment.save(filepath)
+        else:
+            filepath = None
+        
+        # 更新訂單狀態為已完成
+        cursor.execute(
+            "UPDATE orderlist SET status = 'completed', delivery_time = %s, attachment = %s WHERE order_id = %s AND status = 'picked_up';",
+            (datetime.now(), filepath, order_id),
+        )
         conn.commit()
         return cursor.rowcount > 0
     except mysql.connector.Error as e:
         print(f"Error completing order: {e}")
-        return False
+        return False'''
+
 
 #餐廳    
 def confirm_receipt(order_id):
