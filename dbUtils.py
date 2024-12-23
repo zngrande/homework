@@ -293,15 +293,26 @@ def accept_order(order_id, delivery_id):
     finally:
         conn.close()
 # 獲取待處理訂單
-def get_pending_orders(status=None):
+def get_pending_orders(status):
     try:
-        if status:
-            cursor.execute("SELECT * FROM orderlist WHERE status = %s;", (status,))
-        else:
-            cursor.execute("SELECT * FROM orderlist WHERE status = 'pending';")  # 查詢待接訂單
+        sql = """
+        SELECT order_id, Rid, Gid, Did, status
+        FROM orderlist
+        WHERE status = %s;
+        """
+        cursor.execute(sql, (status,))
         return cursor.fetchall()
     except mysql.connector.Error as e:
-        print(f"Error fetching pending orders: {e}")
+        print(f"獲取訂單時發生錯誤: {e}")
+        return []
+# 查看待送訂單 API
+def get_pending_orders_list():
+    try:
+        # 僅查詢 "pending" 狀態的訂單
+        pending_orders = get_pending_orders()
+        return pending_orders
+    except Exception as e:
+        print(f"查看待接訂單時發生錯誤: {e}")
         return []
 
 # 接單
@@ -386,7 +397,7 @@ def transfer_order(order_id):
             order_idd= item['order_id']
             
 
-        sql_insert = "INSERT INTO orderlist (Rid, Gid, order_id, finish_time) VALUES (%s, %s, %s, NOW())"
+        sql_insert = "INSERT INTO orderlist (Rid, Gid, order_id, finish_time,status) VALUES (%s, %s, %s, NOW(),'待接單')"
         cursor.execute(sql_insert,(Rid, Gid, order_idd))
 
         sql_delete = "DELETE FROM prepare_dish WHERE order_id = %s"

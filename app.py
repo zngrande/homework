@@ -244,7 +244,7 @@ def delivery_list_page():
 @app.route("/delivery/orders")
 @login_required
 def view_orders():
-    orders = get_pending_orders(status='pending')
+    orders = get_pending_orders(status='待接單')
     return jsonify(orders)
 
 # 接單 API
@@ -258,11 +258,16 @@ def accept():
     return jsonify({"message": "Failed to accept order."}), 400
 
 # 查看待送訂單 API
-@app.route("/delivery/pending")
-@login_required
-def pending_orders():
-    orders = get_pending_orders(status='accepted') + get_pending_orders(status='picked_up')
-    return jsonify(orders)
+@app.route("/delivery/pending", methods=['GET'])
+def get_pending_orders_list():
+    try:
+        # 獲取兩種狀態的訂單
+        pending_orders = get_pending_orders(status='待接單')
+        return jsonify(pending_orders)
+    except Exception as e:
+        print(f"獲取訂單時發生錯誤: {e}")
+        return jsonify({"error": "無法獲取訂單"}), 500
+
 
 # 取貨 API
 @app.route("/delivery/pickup", methods=['POST'])
@@ -282,49 +287,11 @@ def complete():
     if complete_order(order_id, attachment):
         return jsonify({"message": "Order completed."}), 200
     return jsonify({"message": "Failed to complete order."}), 400
-'''
-@app.route("/delivery/orders")
-@login_required
-def view_orders():
-#1查看待送訂單
-    orders = get_pending_orders()
-    return jsonify(orders)
 
-@app.route("/delivery/accept", methods=['POST'])
-@login_required
-def accept():
-#2接單
-    order_id = request.json.get('Oid')
-    did = session.get('Did')
-    if accept_order(order_id, did):
-        return jsonify({"message": "Order accepted."}), 200
-    return jsonify({"message": "Failed to accept order."}), 400
-
-@app.route("/delivery/pickup", methods=['POST'])
-@login_required
-def pick_up():
-#3取貨
-    order_id = request.json.get('Oid')
-    if pick_up_order(order_id):
-        return jsonify({"message": "Order picked up."}), 200
-    return jsonify({"message": "Failed to pick up order."}), 400
-
-@app.route("/delivery/complete", methods=['POST'])
-@login_required
-def complete():
-#4送達
-    order_id = request.json.get('Oid')
-    if complete_order(order_id):
-        return jsonify({"message": "Order completed."}), 200
-    return jsonify({"message": "Failed to complete order."}), 400
-'''
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
     app.run(debug=True)
     
-
-#好冷嘎嘎ㄍ嘎嘎嘎嘎阿嘎ㄚㄚㄚㄚㄚㄚㄚ
-
 #餐廳
 @app.route("/confirmreceipt")
 def order_list_page():
