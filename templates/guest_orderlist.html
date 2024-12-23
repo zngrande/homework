@@ -87,6 +87,35 @@
         </tbody>
     </table>   
     
+    <h1>已完成訂單</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>價格</th>
+                <th>外送員</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in data_com %}
+            <tr>
+                <td>{{ rec.order_id }}</td>
+                <td>{{ rec.restaurant_name }}</td>
+                <td>{{ rec.total_price }}</td>
+                <td>{{ rec.d_name }}</td>
+                <td>
+                    <form method="post" action="/guest/accept">
+                        <input type="hidden" name="order_id" value="{{ rec.order_id }}">
+                        <button type="submit">已送達</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>  
+
     <h1>歷史訂單</h1>
     <table>
         <thead>

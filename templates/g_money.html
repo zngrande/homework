@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <meta charset="utf-8">
-    <title>首頁</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="查看每月訂單數量的報表">
+    <meta name="keywords" content="訂單統計, 每月訂單數, 外送平台">
+    <title>每月金額統計</title>
     <style>
-        body {
+         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             position: relative; /* 相對定位，便於放置按鈕 */
@@ -37,7 +40,7 @@
             cursor: not-allowed;
         }
         
-        .logout-button, .cart-button, .list-button, .list1-button {
+        .logout-button, .cart-button, .cart1-button {
             position: absolute; /* 使用絕對定位 */
             top: 0px; /* 距離頂部 */
             padding: 6px 12px; /* 按鈕內邊距 */
@@ -56,38 +59,29 @@
         .cart-button {
             right: 90px; /* 靠右，位於登出按鈕左側 */
         }
-        .list-button {
-            right: 200px; /* 靠右，位於登出按鈕左側 */
+        .cart1-button {
+            right: 210px; /* 靠右，位於登出按鈕左側 */
         }
-        .list1-button {
-            right: 295px; /* 靠右，位於登出按鈕左側 */
-        }
+        
         </style>
     </head>
     <body>
-        <a href="/orderlist" class="list-button">訂單</a> <!-- 訂單按鈕 -->
-        <a href="/cart" class="cart-button">購物車</a> <!-- 購物車按鈕 -->
-        <a href="/logout" class="logout-button">登出</a> <!-- 登出按鈕 -->
-        <a href="/gm" class="list1-button">每月消費金額</a> 
-
-    <h1>您好，{{ name }}</h1>
-
-    <hr />
+        <a href="/loginPage" class="logout-button">登出</a> 
+        <a href="/guestfrontPage" class="cart-button">首頁</a>
+    <h1>每月消費金額</h1>
     <table>
         <thead>
             <tr>
-                <th>餐廳名稱</th>
-                <th>餐廳地址</th>
-                <th>評分</th>
+                <th>月份</th>
+                <th>金額</th>
             </tr>
         </thead>
         <tbody>
-            {% for rec in data %}
+            {% for data in data %}
             <tr>
-                <td><a href="/restaurantdishlist/{{ rec.name }}">{{ rec.name }}</a></td>
-                <td>{{ rec.address }}</td>
-                <td>{{ rec.point }}</td>
-            </tr>        
+                <td>{{ data.month }}</td>
+                <td>{{ data.total_price }}</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>

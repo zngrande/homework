@@ -5,52 +5,80 @@
     <title>{{ restaurant }}的菜單</title>
     <style>
         body {
-            position: relative;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            position: relative; /* 相對定位，便於放置按鈕 */
         }
-        .logout-button, .cart-button {
-            position: absolute;
-            top: -5px;
-            padding: 6px 12px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
             cursor: pointer;
         }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-button, .cart-button, .list-button {
+            position: absolute; /* 使用絕對定位 */
+            top: -7px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+        
         .logout-button {
-            right: 0px;
+            right: 0px; /* 靠右 */
         }
+        
         .cart-button {
-            right: 80px;
+            right: 90px; /* 靠右，位於登出按鈕左側 */
         }
-        .button {
-            display: inline-block;
-            padding: 6px 14px;
-            background-color: #007BFF;
-            color: white;
-            text-align: center;
-            border-radius: 4px;
-            text-decoration: none;
+        .list-button {
+            right: 200px; /* 靠右，位於登出按鈕左側 */
         }
-        .button.add-to-cart {
-            background-color: #28a745;
-        }
-    </style>
-</head>
-<body>
-    <a href="/cart" class="button cart-button">購物車</a>
-    <a href="/logout" class="button logout-button">登出</a>
+        
+        </style>
+    </head>
+    <body>
+        <a href="/guestfrontPage" class="list-button">首頁</a> <!-- 訂單按鈕 -->
+        <a href="/cart" class="cart-button">購物車</a> <!-- 購物車按鈕 -->
+        <a href="/logout" class="logout-button">登出</a> <!-- 登出按鈕 -->
     <p>{{ restaurant }}的菜單</p>
     <hr />
-    <table width="600" border="1">
-        <tr>
-            <td>餐點名稱</td>
-            <td>價錢</td>
-            <td>簡介</td>
-            <td>數量</td>
-        </tr>
-        {% for rec in data %}
+    <table>
+        <thead>
+            <tr>
+                <th>餐點名稱</th>
+                <th>價錢</th>
+                <th>簡介</th>
+                <th>數量</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in data %}
         <tr>
             <td>{{ rec.dish_name }}</td>
             <td>{{ rec.price }}</td>
@@ -61,13 +89,14 @@
                     <input type="hidden" name="dish_name" value="{{ rec.dish_name }}">
                     <!-- 顯示當前數量，若沒有則顯示0 -->
                     <input type="number" name="quantity" value="{{ cart_dict.get(rec.dish_name, 0) }}" min="0" />
-                    <button type="submit">加入所有選擇的餐點</button>
+                    <button type="submit" onclick="return confirm('成功加入')">加入所有選擇的餐點</button>
                 </form>
             </td>
         </tr>
         {% endfor %}
+        </tbody>
+        
     </table>   
-    <a href="/guestfrontPage">回到首頁</a>
     <br>
 </body>
 </html>

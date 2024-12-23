@@ -40,7 +40,7 @@
             cursor: not-allowed;
         }
         
-        .logout-button, .cart-button {
+        .logout-button, .cart-button, .cart1-button {
             position: absolute; /* 使用絕對定位 */
             top: 0px; /* 距離頂部 */
             padding: 6px 12px; /* 按鈕內邊距 */
@@ -59,12 +59,15 @@
         .cart-button {
             right: 90px; /* 靠右，位於登出按鈕左側 */
         }
-        
+        .cart1-button {
+            right: 210px; /* 靠右，位於登出按鈕左側 */
+        }
         </style>
     </head>
     <body>
         <a href="/loginPage" class="logout-button">登出</a> 
         <a href="/delivery_list" class="cart-button">待送清單</a>
+        <a href="/dm" class="cart1-button">每月訂單統計</a>
         <h1>可接訂單</h1>
         <table>
             <thead>

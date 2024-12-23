@@ -303,6 +303,17 @@ def update_restaurant_points():
     except mysql.connector.Error as e:
         print(f"更新餐廳評分失敗: {e}")
         conn.rollback()
+def complete_guest(order_id):
+    try:
+        cursor.execute(
+            "UPDATE orderlist SET status = '已完成' WHERE order_id = %s;",
+            (order_id,), 
+        )
+        conn.commit()
+    except mysql.connector.Error as e:
+        print(f"Error updating order status: {e}")
+        conn.rollback()
+
 
 #deliver
 
@@ -387,7 +398,7 @@ def pick_up_order(order_id):
 def complete_order(order_id):
     try:
         cursor.execute(
-            "UPDATE orderlist SET status = '已完成', arrive_time = %s WHERE order_id = %s;",
+            "UPDATE orderlist SET status = '已送達', arrive_time = %s WHERE order_id = %s;",
             (datetime.now(), order_id),
         )
         conn.commit()
@@ -502,3 +513,50 @@ def update_res_information(name, address, phone, Rid):
     sql = "UPDATE restaurant SET name = %s, address = %s, phone = %s WHERE Rid = %s"
     cursor.execute(sql,(name,address,phone,Rid,))
     conn.commit()
+
+#各自花錢收錢送幾單
+#d
+def monthly_orders_d(Did):
+    # 查詢每月的訂單數
+    query = """
+    SELECT 
+        MONTH(arrive_time) AS month, 
+        COUNT(order_id) AS how_many
+    FROM orderlist
+    WHERE Did = %s
+    GROUP BY MONTH(arrive_time)
+    ORDER BY MONTH(arrive_time);
+    """
+    cursor.execute(query,(Did,))
+    return cursor.fetchall()
+
+#r
+def monthly_orders_r(Rid):
+    # 查詢每月的訂單數與總金額
+    query = """
+    SELECT 
+        MONTH(orderlist.arrive_time) AS month, 
+        SUM(history_orderlists.quantity * history_orderlists.price) AS total_price
+    FROM orderlist
+    JOIN history_orderlists ON history_orderlists.order_id = orderlist.order_id
+    WHERE orderlist.Rid = %s
+    GROUP BY MONTH(orderlist.arrive_time)
+    ORDER BY MONTH(orderlist.arrive_time);
+    """
+    cursor.execute(query, (Rid,))
+    return cursor.fetchall()
+
+def monthly_orders_g(Gid):
+    # 查詢每月的訂單數與總金額
+    query = """
+    SELECT 
+        MONTH(orderlist.arrive_time) AS month, 
+        SUM(history_orderlists.quantity * history_orderlists.price) AS total_price
+    FROM orderlist
+    JOIN history_orderlists ON history_orderlists.order_id = orderlist.order_id
+    WHERE orderlist.Gid = %s
+    GROUP BY MONTH(orderlist.arrive_time)
+    ORDER BY MONTH(orderlist.arrive_time);
+    """
+    cursor.execute(query, (Gid,))
+    return cursor.fetchall()

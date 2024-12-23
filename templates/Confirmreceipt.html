@@ -4,49 +4,72 @@
     <meta charset="utf-8">
     <title>確認接單</title>
     <style>
-        .logout-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 6px 12px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            cursor: pointer;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            position: relative; /* 相對定位，便於放置按鈕 */
         }
-
+        
         table {
-            width: 800px;
+            width: 100%;
             border-collapse: collapse;
-            margin: 20px auto;
+            margin-top: 20px;
         }
-
-        table, th, td {
-            border: 1px solid black;
-        }
-
+        
         th, td {
-            padding: 10px;
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: center;
         }
-
-        h1 {
-            text-align: center;
+        
+        th {
+            background-color: #f2f2f2;
         }
-
-        .action-link {
-            color: #007BFF;
+        
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
             cursor: pointer;
-            text-decoration: underline;
         }
-    </style>
-    
-</head>
-<body>
-    <a href="/loginPage" class="logout-button">登出</a>
-
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-button, .list-button, .add-button, .add1-button {
+            position: absolute; /* 使用絕對定位 */
+            top: 0px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+        
+        .logout-button {
+            right: 0px; /* 靠右 */
+        }
+        
+        .list-button {
+            right: 80px; /* 靠右，位於登出按鈕左側 */
+        }
+        .add-button {
+            right: 190px; /* 靠右，位於登出按鈕左側 */
+        }
+        .add1-button {
+            right: 300px; /* 靠右，位於登出按鈕左側 */
+        }
+        
+        </style>
+    </head>
+    <body>
+        <a href="/loginPage" class="logout-button">登出</a> 
+        <a href="/adddish"class="add-button">新增餐點</a> 
+        <a href="/dish_list"class="list-button">餐點清單</a>
+        <a href="/rm"class="add1-button">每月營收統計</a>
     <h1>確認接單</h1>
     <table>
         <thead>
@@ -109,11 +132,5 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="/regrest">餐廳資料</a> | 
-        <a href="/adddish">新增餐點</a> |
-        <a href="/dish_list">餐點清單</a>
-    </div>
 </body>
 </html>
