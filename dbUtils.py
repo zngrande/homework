@@ -191,7 +191,7 @@ def send_dish(Gid):
     # 查詢購物車中的資料
     sql_select = """
     SELECT guest_cart.restaurant_name, guest_cart.dish_name, guest_cart.price, guest_cart.quantity, 
-           guest_cart.Gid, restaurant.Rid, guest.name
+           guest_cart.Gid, restaurant.Rid, guest.name AS guest_name
     FROM guest_cart
     JOIN restaurant ON restaurant.name = guest_cart.restaurant_name
     JOIN guest ON guest.Gid = guest_cart.Gid
@@ -206,8 +206,8 @@ def send_dish(Gid):
     
     # 插入到 prepare_dish 表的語句
     sql_insert_prepare_dish = """
-    INSERT INTO prepare_dish (Rid, dish_name, quantity, Gid, order_id)
-    VALUES (%s, %s, %s, %s, %s)
+    INSERT INTO prepare_dish (Rid, dish_name, quantity, price, Gid, guest_name,  order_id)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
     
     try:
@@ -233,8 +233,10 @@ def send_dish(Gid):
             dish_name = item['dish_name']
             quantity = item['quantity']
             Gid = item['Gid']
-            print(f"插入資料: Rid={Rid}, dish_name={dish_name}, quantity={quantity}, Gid={Gid}, order_id={order_id}")
-            cursor.execute(sql_insert_prepare_dish, (Rid, dish_name, quantity, Gid, order_id))
+            price = item['price']
+            guest_name = item['guest_name']
+            print(f"插入資料: Rid={Rid}, dish_name={dish_name}, quantity={quantity}, price={price}, Gid={Gid}, guest_name={guest_name}, order_id={order_id}")
+            cursor.execute(sql_insert_prepare_dish, (Rid, dish_name, quantity, price, Gid, guest_name, order_id))
 
         # 清空該使用者的購物車資料
         sql_delete = "DELETE FROM guest_cart WHERE Gid = %s;"
@@ -251,19 +253,57 @@ def send_dish(Gid):
         return "資料庫錯誤，請稍後再試！", 500
     
 #deliver
+'''
+def get_db_connection():
+    """建立並返回一個資料庫連接。"""
+    conn = sqlite3.connect('your_database.db')  # 修改為你的資料庫名稱
+    conn.row_factory = sqlite3.Row  # 返回字典風格的行
+    return conn
+'''
+def get_pending_orders():
+    """從資料庫獲取待接訂單。"""
+    cursor.execute("""
+        SELECT order_id, Rid, Gid, Did, status, delivery_time, pickup_time, finish_time
+        FROM orderlist
+        WHERE status = 'pending' AND Did IS NULL
+    """)
+    orders = [
+        {
+            "order_id": row[0],
+            "restaurant_name": f"餐廳 {row[1]}",  # 示例：將 Rid 映射為餐廳名稱
+            "delivery_address": "地址未提供",  # 修改為實際地址來源
+            "amount": 100  # 修改為真實金額來源
+        }
+        for row in cursor.fetchall()
+    ]
+    conn.close()
+    return orders
+
+def accept_order(delivery_id, order_id):
+    try:
+        cursor.execute("""
+            UPDATE orderlist
+            SET Did = %s, status = 'accepted'
+            WHERE order_id = %s AND Did = 0
+        """, (delivery_id, order_id))
+        conn.commit()
+        return cursor.rowcount > 0  # 返回是否更新成功
+    finally:
+        conn.close()
 # 獲取待處理訂單
 def get_pending_orders(status):
-    try:
-        sql = """
-        SELECT order_id, Rid, Gid, Did, status
-        FROM orderlist
-        WHERE status = %s;
-        """
-        cursor.execute(sql, (status,))
-        return cursor.fetchall()
-    except mysql.connector.Error as e:
-        print(f"獲取訂單時發生錯誤: {e}")
-        return []
+    sql = """
+    SELECT orderlist.order_id, orderlist.Rid, restaurant.name AS restaurant_name, orderlist.Gid, guest.address, guest.name AS guest_name, SUM(history_prepare_dish.quantity * history_prepare_dish.price) AS total_price
+    FROM orderlist
+    JOIN restaurant ON restaurant.Rid = orderlist.Rid
+    JOIN guest ON guest.Gid = orderlist.Gid
+    JOIN history_prepare_dish ON history_prepare_dish.order_id = orderlist.order_id
+    WHERE status = %s;
+    """
+    cursor.execute(sql, (status,))
+    return cursor.fetchall()
+
+
 # 查看待送訂單 API
 def get_pending_orders_list():
     try:
@@ -274,93 +314,54 @@ def get_pending_orders_list():
         print(f"查看待接訂單時發生錯誤: {e}")
         return []
 
-'''def get_all_orders():
-    sql = """
-    SELECT 
-        ol.order_id, 
-        r.name AS restaurant_name, 
-        g.address AS delivery_address, 
-        SUM(pd.quantity * d.price) AS total_price,  -- 計算金額
-        ol.status
-    FROM orderlist ol
-    JOIN restaurant r ON ol.Rid = r.Rid
-    JOIN guest g ON ol.Gid = g.Gid
-    JOIN prepare_dish pd ON ol.order_id = pd.order_id
-    JOIN dish d ON pd.dish_name = d.dish_name AND pd.Rid = d.restaurant_name
-    GROUP BY ol.order_id, r.name, g.address, ol.status
-    ORDER BY FIELD(ol.status, '待接單', '已接單'), ol.order_id
-    """
-
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(sql)
-        return cursor.fetchall()  # 返回所有訂單資料
-    finally:
-        conn.close()
-def accept_order(order_id, Did):
-    sql = """
-    UPDATE orderlist
-    SET status = '已接單', Did = %s
-    WHERE order_id = %s AND status = '待接單'
-    """
-
-    try:
-        cursor = conn.cursor()
-        affected_rows = cursor.execute(sql, (Did, order_id))
-        conn.commit()
-        return affected_rows > 0  # 確認是否成功更新
-    finally:
-        conn.close()
-
-'''
 # 接單
 def accept_order(order_id, Did):
-    sql = """
-    UPDATE orderlist
-    SET status = '已接單', Did = %s
-    WHERE order_id = %s AND status = '待接單'
-    """
-
     try:
-        cursor = conn.cursor()
-        affected_rows = cursor.execute(sql, (Did, order_id))
+        cursor.execute(
+            "UPDATE orderlist SET status = 'accepted', Did = %s WHERE order_id = %s AND status = 'pending';",
+            (Did, order_id),
+        )
         conn.commit()
-        return affected_rows > 0  # 確認是否成功更新
-    finally:
-        conn.close()
-
+        return cursor.rowcount > 0  # 如果更新了一行，則返回 True
+    except mysql.connector.Error as e:
+        print(f"Error accepting order: {e}")
+        return False
 
 
 # 取貨
-def pickup_order(oID, bID):
-    sql = """
-    UPDATE orderlist
-    SET status = '已取貨'
-    WHERE order_id = %s AND bID = %s AND status = '已接單'
-    """
+def pick_up_order(order_id):
     try:
-        cursor = conn.cursor()
-        affected_rows = cursor.execute(sql, (oID, bID))
+        cursor.execute(
+            "UPDATE orderlist SET status = 'picked_up', pickup_time = %s WHERE order_id = %s AND status = 'accepted';",
+            (datetime.now(), order_id),
+        )
         conn.commit()
-        return affected_rows > 0  # 是否成功更新
-    finally:
-        conn.close()
-
+        return cursor.rowcount > 0
+    except mysql.connector.Error as e:
+        print(f"Error picking up order: {e}")
+        return False
 
 # 送達
-def complete_order(oID):
-    sql = """
-    UPDATE orderlist
-    SET status = '送達'
-    WHERE order_id = %s AND status = '已接單'
-    """
+def complete_order(order_id, attachment):
     try:
-        cursor = conn.cursor()
-        affected_rows = cursor.execute(sql, (oID,))
+        # 處理附件並保存
+        if attachment and allowed_file(attachment.filename):
+            filename = f"{order_id}_{attachment.filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            attachment.save(filepath)
+        else:
+            filepath = None
+        
+        # 更新訂單狀態為已完成
+        cursor.execute(
+            "UPDATE orderlist SET status = 'completed', delivery_time = %s, attachment = %s WHERE order_id = %s AND status = 'picked_up';",
+            (datetime.now(), filepath, order_id),
+        )
         conn.commit()
-        return affected_rows > 0  # 是否成功更新
-    finally:
-        conn.close()
+        return cursor.rowcount > 0
+    except mysql.connector.Error as e:
+        print(f"Error completing order: {e}")
+        return False
 
 
 #餐廳    
@@ -379,7 +380,6 @@ def confirm_receipt(order_id):
 
         
 def transfer_order(order_id):
-
     print(order_id)
     try:
         sql = "SELECT * FROM prepare_dish WHERE order_id = %s AND confirm = 1 ORDER BY confirm_time ASC"
@@ -392,19 +392,28 @@ def transfer_order(order_id):
         for item in order:
             Rid = item['Rid']
             Gid = item['Gid']
-            order_idd= item['order_id']
-            
+            order_id = item['order_id']
+            quantity = item['quantity']
+            price = item['price']
 
-        sql_insert = "INSERT INTO orderlist (Rid, Gid, order_id, finish_time,status) VALUES (%s, %s, %s, NOW(),'待接單')"
-        cursor.execute(sql_insert,(Rid, Gid, order_idd))
-
+            # 插入 history_prepare_dish 表
+            sql_insert_history = "INSERT INTO history_prepare_dish (order_id, quantity, price) VALUES (%s, %s, %s)"
+            cursor.execute(sql_insert_history, (order_id, quantity, price))
+        # 插入 orderlist 表
+        sql_insert = "INSERT INTO orderlist (Rid, Gid, order_id, finish_time, status) VALUES (%s, %s, %s, NOW(), '待接單')"
+        cursor.execute(sql_insert, (Rid, Gid, order_id))
+        # 刪除已轉移的資料
         sql_delete = "DELETE FROM prepare_dish WHERE order_id = %s"
         cursor.execute(sql_delete, (order_id,))
+
+        # 提交變更
         conn.commit()
         return "訂單已成功轉移"
+
     except mysql.connector.Error as e:
         conn.rollback()
-        return  f"資料庫操作失敗: {e}"
+        return f"資料庫操作失敗: {e}"
+
 
 def get_order_data(confirm, Rid):
     sql = "SELECT * FROM prepare_dish WHERE confirm = %s AND Rid=%s ;"
@@ -457,4 +466,8 @@ def get_finish_dish(Rid):
 def get_res_by_Rid(Rid):
     sql = "SELECT * FROM restaurant WHERE Rid = %s;"
     cursor.execute(sql,(Rid,))
-    return cursor.fetchall()
+    return cursor.fetchone()
+def update_res_information(name, address, phone, Rid):
+    sql = "UPDATE restaurant SET name = %s, address = %s, phone = %s WHERE Rid = %s"
+    cursor.execute(sql,(name,address,phone,Rid,))
+    conn.commit()

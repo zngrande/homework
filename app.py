@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect,jsonify, url_for, flash
 import sqlite3
 from functools import wraps
-from dbUtils import get_pending_orders, accept_order,  get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
+from dbUtils import get_pending_orders, update_res_information, accept_order, pick_up_order, get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
 from datetime import datetime, timedelta
 
 # creates a Flask application, specify a static folder on /
@@ -55,6 +55,7 @@ def login():
             
             if role == "customer":
                 session['Gid'] = user['Gid']
+                session['guest_name'] = user['name']
                 return redirect("/guestfrontPage")
             elif role == "restaurant":
                 session['Rid'] = user['Rid']
@@ -129,7 +130,7 @@ def dish_records(name):
 @app.route('/place_dishes', methods=['POST'])
 def dishes():
     dish_name = request.form.get('dish_name')
-    quantity = request.form.get('quantity')  # 使用 get() 防止 KeyError
+    quantity = request.form.get('quantity') 
 
     if not dish_name or not quantity:
         return "未提供餐點名稱或數量", 400  # 這裡會返回具體的錯誤訊息
@@ -187,7 +188,6 @@ def send_to_restaurant():
         return "發生錯誤，請稍後再試！", 500
 
 # deliver
-# deliver
 @app.route('/register', methods=['POST'])
 def register_user():
     data = request.json
@@ -215,7 +215,7 @@ def update_cart():
         add_to_cart(
             dish_name=data['dish_name'], price=data['price'], 
             restaurant_name=data['restaurant_name'], quantity=data['quantity'], 
-            Gid=data['Gid']
+            Gid=data['Gid'], guest_name=data['guest_name']
         )
         return jsonify({"message": "Cart updated successfully"}), 200
     except Exception as e:
@@ -230,10 +230,7 @@ def submit_order():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 ''''''
-@app.route("/view_orders")
-@login_required
-def view_orders_page():
-    return render_template("view_orders.html")
+
 
 @app.route("/delivery_list")
 @login_required
@@ -241,12 +238,11 @@ def delivery_list_page():
     return render_template("delivery_list.html")
 
 # 查看可接訂單 API
-@app.route("/delivery/orders")
+@app.route("/view_orders")
 @login_required
 def view_orders():
-    orders = get_pending_orders(status='待接單')
-    return jsonify(orders)
-
+    data = get_pending_orders(status='待接單')
+    return render_template("view_orders.html",data=data)
 
 # 接單 API
 @app.route("/delivery/accept", methods=['POST'])
@@ -263,7 +259,7 @@ def accept():
 def get_pending_orders_list():
     try:
         # 獲取兩種狀態的訂單
-        pending_orders = get_pending_orders(status='待接單')
+        data = get_pending_orders(status='待接單')
         return jsonify(pending_orders)
     except Exception as e:
         print(f"獲取訂單時發生錯誤: {e}")
@@ -309,10 +305,20 @@ def order_list_page():
 
     return render_template('Confirmreceipt.html', data_confirm_0=data_confirm_0, data_confirm_1=data_confirm_1)
 
-@app.route('/regrest')        
+#修改餐廳資料
+@app.route("/regrest", methods=['GET', 'POST'])    
 def regrest():
-    Rid=session.get('Rid')
+    Rid = session.get('Rid')
     data=get_res_by_Rid(Rid)
+    
+    if request.method == 'POST':
+        form = request.form
+        name = form['name']
+        address = form['address']
+        phone = form['phone']
+
+        update_res_information(name, address, phone, Rid)
+        return redirect("/confirmreceipt")
     return render_template('regrest.html',data=data)
 '''
 @app.route("/confirmreceipt_action", methods=['POST'])
@@ -348,18 +354,8 @@ def confirm_order():
 ''' 
 
 
-'''
-@app.route('/delete_dish/<int:dish_id>', methods=['POST'])
-def delete_dish(dish_id):
-    dish = get_dish_by_restaurant_name(dish_id)
-    if dish is None or dish['restaurant_name'] != session.get('restaurant_name'):
-        flash("找不到該菜品，或者無權刪除")
-        return redirect(url_for('adddish'))
-    
-    delete_dish_by_id(dish_id)
-    flash("菜品已刪除")
-    return redirect(url_for('adddish'))
-'''
+
+
 @app.before_request
 def before_request():
     print(f"Session at start: {session}")  # 確保會話資訊是正確的
@@ -399,6 +395,12 @@ def edit_product(dish_id):
     # GET 請求時，取得餐點詳細資料
     data = get_dish_by_id(dish_id)  # 使用 dish_id 查詢
     return render_template('editdish.html', data=data)
+
+
+@app.route('/delete_dish/<int:dish_id>', methods=['get'])
+def delete_dish(dish_id):
+    delete_dish_by_id(dish_id)
+    return redirect("/dish_list")
 
 @app.route('/add_dish', methods=['POST'])
 def add_new_dish():

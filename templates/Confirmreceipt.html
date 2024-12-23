@@ -63,7 +63,7 @@
             <tr id="row-{{ rec.id }}">
                 <td>{{ rec.dish_name }}</td>
                 <td>{{ rec.quantity }}</td>
-                <td>{{ rec.Gid}}</td>
+                <td>{{ rec.guest_name}}</td>
                 <td>
                     <form method="post" action="/confirm0">
                         <input type="hidden" name="order_id" value="{{ rec.order_id }}">
@@ -98,7 +98,7 @@
                 <td>{{ rec.dish_name }}</td>
                 <td>{{ rec.quantity }}</td>
                 <td>{{ rec.finish_time }}</td>
-                <td>{{ rec.Gid}}</td>
+                <td>{{ rec.guest_name}}</td>
                 <td>
                     <form method="post" action="/confirm1">
                         <input type="hidden" name="order_id" value="{{ rec.order_id }}">
@@ -113,7 +113,7 @@
     <div style="text-align: center; margin-top: 20px;">
         <a href="/regrest">餐廳資料</a> | 
         <a href="/adddish">新增餐點</a> |
-        <a href="/dish_list">編輯餐點</a>
+        <a href="/dish_list">餐點清單</a>
     </div>
 </body>
 </html>

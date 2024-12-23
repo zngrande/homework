@@ -55,7 +55,7 @@
                 <a href="/editdish/{{ rec.dish_id }}" class="button">修改</a>
                 
                 <!-- 刪除按鈕 -->
-                <a href="/deleteProduct/{{ rec.dish_id }}" class="button delete" onclick="return confirm('確定要刪除這個餐點嗎？');">刪除</a>
+                <a href="/delete_dish/{{ rec.dish_id }}" class="button delete" onclick="return confirm('確定要刪除這個餐點嗎？');">刪除</a>
             </td>
         </tr>
         {% endfor %}
