@@ -4,90 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delivery List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            position: relative; /* 相對定位，便於放置按鈕 */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-button, .cart-button {
+            position: absolute; /* 使用絕對定位 */
+            top: 0px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+        
+        .logout-button {
+            right: 0px; /* 靠右 */
+        }
+        
+        .cart-button {
+            right: 90px; /* 靠右，位於登出按鈕左側 */
+        }
+    </style>
 </head>
 <body>
+    <a href="/loginPage" class="logout-button">登出</a> 
+    <a href="/view_orders" class="cart-button">可接清單</a>
     <h1>待送清單</h1>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>訂單編號</th>
                 <th>餐廳名稱</th>
+                <th>訂購人</th>
                 <th>送達地址</th>
                 <th>金額</th>
-                <th>狀態</th>
                 <th>操作</th>
             </tr>
         </thead>
-        <tbody id="delivery-table">
-            <!-- JS will dynamically populate rows -->
+        <tbody>
+            {% for data in data_find_delivery %}
+            <tr>
+                <td>{{ data.order_id }}</td>
+                <td>{{ data.restaurant_name }}</td>
+                <td>{{ data.guest_name }}</td>
+                <td>{{ data.address }}</td>
+                <td>{{ data.total_price }}</td>
+                <td>
+                    <form method="post" action="/delivery/pickup">
+                        <input type="hidden" name="order_id" value="{{ data.order_id }}">
+                        <button type="submit">已領取餐點</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>   
+    </table>
+    <hr/>
+
+    <h1>準備送餐</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>訂購人</th>
+                <th>送達地址</th>
+                <th>金額</th>
+                <th>預計送達時間</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in data_ready_to_send %}
+            <tr>
+                <td>{{ data.order_id }}</td>
+                <td>{{ data.restaurant_name }}</td>
+                <td>{{ data.guest_name }}</td>
+                <td>{{ data.address }}</td>
+                <td>{{ data.total_price }}</td>
+                <td>{{ data.arrive_time }}</td>
+                <td>
+                    <form method="post" action="/delivery/complete">
+                    <input type="hidden" name="order_id" value="{{ data.order_id }}">
+                    <button type="submit">已送達</button></form></td>
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
-    <script>
-        async function fetchDeliveries() {
-            const response = await fetch('/delivery/pending');
-            const deliveries = await response.json();
-            const table = document.getElementById('delivery-table');
-            table.innerHTML = '';
-            deliveries.forEach(delivery => {
-                const buttonLabel = delivery.status === 'accepted' ? '取貨' : '送達';
-                const action = delivery.status === 'accepted' ? `pickupOrder(${delivery.Oid})` : `deliverOrder(${delivery.Oid})`;
-                const attachmentInput = delivery.status === '送達中' ? `<input type="file" id="attachment-${delivery.Oid}">` : '';
-                row.innerHTML = `
-                    <td>${delivery.Oid}</td>
-                    <td>${delivery.restaurant_name}</td>
-                    <td>${delivery.delivery_address}</td>
-                    <td>${delivery.amount}</td>
-                    <td>${delivery.status}</td>
-                    <td>
-                        <button onclick="${action}">${buttonLabel}</button>
-                        ${attachmentInput}
-                    </td>
-                `;
-                table.appendChild(row);
-            });
-        }
-
-        async function pickupOrder(orderId) {
-            const response = await fetch('/delivery/pickup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ Oid: orderId })
-            });
-            if (response.ok) {
-                alert('取貨成功！');
-                fetchDeliveries(); // 刷新待送清單
-            } else {
-                alert('取貨失敗！');
-            }
-        }
-
-        async function deliverOrder(orderId) {
-            const attachment = document.getElementById(`attachment-${orderId}`).files[0];
-            if (!attachment) {
-                alert('請附上送達憑證！');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('Oid', orderId);
-            formData.append('attachment', attachment);
-
-            const response = await fetch('/delivery/complete', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                alert('送達成功！');
-                fetchDeliveries(); // 刷新待送清單
-            } else {
-                alert('送達失敗！');
-            }
-        }
-
-        fetchDeliveries();
-    </script>
 </body>
 </html>

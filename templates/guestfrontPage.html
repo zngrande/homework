@@ -5,11 +5,41 @@
     <title>首頁</title>
     <style>
         body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
             position: relative; /* 相對定位，便於放置按鈕 */
         }
-        .logout-button, .cart-button {
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-button, .cart-button, .list-button {
             position: absolute; /* 使用絕對定位 */
-            top: -5px; /* 距離頂部 */
+            top: 0px; /* 距離頂部 */
             padding: 6px 12px; /* 按鈕內邊距 */
             background-color: #007BFF; /* 按鈕顏色 */
             color: white; /* 按鈕文字顏色 */
@@ -18,53 +48,45 @@
             text-decoration: none; /* 去除底線 */
             cursor: pointer; /* 鼠標變成手形 */
         }
+        
         .logout-button {
             right: 0px; /* 靠右 */
         }
+        
         .cart-button {
-            right: 80px; /* 靠右，位於登出按鈕左側 */
+            right: 90px; /* 靠右，位於登出按鈕左側 */
         }
-        .button {
-            display: inline-block;
-            padding: 6px 14px;
-            background-color: #007BFF; /* 按鈕顏色 */
-            color: white; /* 按鈕文字顏色 */
-            text-align: center; /* 文字置中 */
-            border-radius: 4px; /* 圓角 */
-            text-decoration: none; /* 去除底線 */
+        .list-button {
+            right: 200px; /* 靠右，位於登出按鈕左側 */
         }
-        .button.delete {
-            background-color: #dc3545; /* 刪除按鈕的顏色 */
-        }
-        .welcome-message {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <a href="/cart" class="button cart-button">購物車</a> <!-- 購物車按鈕 -->
-    <a href="/logout" class="button logout-button">登出</a> <!-- 登出按鈕 -->
+        
+        </style>
+    </head>
+    <body>
+        <a href="/orderlist" class="list-button">訂單</a> <!-- 訂單按鈕 -->
+        <a href="/cart" class="cart-button">購物車</a> <!-- 購物車按鈕 -->
+        <a href="/logout" class="logout-button">登出</a> <!-- 登出按鈕 -->
 
-    <!-- 歡迎訊息 -->
-    <p class="welcome-message">您好，{{ name }}</p>
+    <h1>您好，{{ name }}</h1>
 
-    <p>首頁</p>
     <hr />
-    <table width="600" border="1">
-        <tr>
-            <td>餐廳名稱</td>
-            <td>餐廳地址</td>
-            <td>評分</td>
-        </tr>
-        {% for rec in data %}
-        <tr>
-            <td><a href="/restaurantdishlist/{{ rec.name }}">{{ rec.name }}</a></td>
-            <td>{{ rec.address }}</td>
-            <td>{{ rec.point }}</td>
-        </tr>        
-        {% endfor %}
+    <table>
+        <thead>
+            <tr>
+                <th>餐廳名稱</th>
+                <th>餐廳地址</th>
+                <th>評分</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in data %}
+            <tr>
+                <td><a href="/restaurantdishlist/{{ rec.name }}">{{ rec.name }}</a></td>
+                <td>{{ rec.address }}</td>
+                <td>{{ rec.point }}</td>
+            </tr>        
+            {% endfor %}
+        </tbody>
     </table>
-    <br>
 </body>
 </html>

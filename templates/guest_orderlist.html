@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>訂單</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            position: relative; /* 相對定位，便於放置按鈕 */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .logout-button, .cart-button {
+            position: absolute; /* 使用絕對定位 */
+            top: 0px; /* 距離頂部 */
+            padding: 6px 12px; /* 按鈕內邊距 */
+            background-color: #007BFF; /* 按鈕顏色 */
+            color: white; /* 按鈕文字顏色 */
+            border: none; /* 去除邊框 */
+            border-radius: 4px; /* 圓角 */
+            text-decoration: none; /* 去除底線 */
+            cursor: pointer; /* 鼠標變成手形 */
+        }
+        
+        .logout-button {
+            right: 0px; /* 靠右 */
+        }
+        
+        .cart-button {
+            right: 90px; /* 靠右，位於登出按鈕左側 */
+        }
+        
+        </style>
+    </style>
+</head>
+<body>
+    <a href="/loginPage" class="logout-button">登出</a> <!-- 新增的登出按鈕 -->
+    <a href="/guestfrontPage" class="cart-button">首頁</a>
+    <h1>訂單內容</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>價格</th>
+                <th>外送員</th>
+                <th>預計抵達時間</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in data %}
+            <tr>
+                <td>{{ rec.order_id }}</td>
+                <td>{{ rec.restaurant_name }}</td>
+                <td>{{ rec.total_price }}</td>
+                <td>{{ rec.d_name }}</td>
+                <td>{{ rec.arrive_time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>   
+    
+    <h1>歷史訂單</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>訂單編號</th>
+                <th>餐廳名稱</th>
+                <th>價格</th>
+                <th>外送員</th>
+                <th>評分</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rec in data_history %}
+            <tr>
+                <td>{{ rec.order_id }}</td>
+                <td>{{ rec.restaurant_name }}</td>
+                <td>{{ rec.total_price }}</td>
+                <td>{{ rec.d_name }}</td>
+                <td>
+                    {% if rec.point is defined and rec.point is not none %}
+                        <p>您已評分：{{ rec.point }} 分</p>
+                    {% else %}
+                        <form method="post" action="/rate">
+                            <input type="hidden" name="order_id" value="{{ rec.order_id }}">
+                            <label for="rating">評分:</label>
+                            <select name="rating" required>
+                                <option value="" disabled selected>選擇評分</option>
+                                <option value="1">1 分</option>
+                                <option value="2">2 分</option>
+                                <option value="3">3 分</option>
+                                <option value="4">4 分</option>
+                                <option value="5">5 分</option>
+                            </select>
+                            
+                            <button type="submit">確定</button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+</body>
+</html>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, session, redirect,jsonify, url_for, flash
 import sqlite3
 from functools import wraps
-from dbUtils import get_pending_orders, update_res_information, accept_order, pick_up_order, get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
+from dbUtils import get_pending_orders, rate, update_restaurant_points, guest_get_arrive, get_pending_orders_byDid, update_res_information, accept_order, pick_up_order, get_dish_by_id, get_res_by_Rid, complete_order, get_user_by_id, get_prepare_dish, add_user, get_all_restaurants, get_dish_list_by_name, get_restaurant_details_by_name, get_dish_details_by_dish_name, add_to_cart, get_cart_detail, delete_from_cart, send_dish, confirm_receipt, get_order_data, add_dish, update_dish, delete_dish_by_id, transfer_order, get_dish_by_Rid
 from datetime import datetime, timedelta
 
 # creates a Flask application, specify a static folder on /
@@ -62,6 +62,7 @@ def login():
                 session['restaurant_name'] = user['name']
                 return redirect("/confirmreceipt")
             elif role == "delivery":
+                session['Did'] = user['Did']
                 return redirect("/view_orders")
         else:
             print("密碼不正確")
@@ -187,103 +188,93 @@ def send_to_restaurant():
         print(f"Error sending order to restaurant: {e}")
         return "發生錯誤，請稍後再試！", 500
 
-# deliver
-@app.route('/register', methods=['POST'])
-def register_user():
-    data = request.json
-    try:
-        add_user(
-            id=data['id'], pw=data['pw'], role=data['role'], 
-            name=data['name'], phone=data['phone'], address=data['address']
-        )
-        return jsonify({"message": "User registered successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#客人看訂單
+@app.route("/orderlist")
+def guest_orderlist():
+    Gid = session.get('Gid')
+    data = guest_get_arrive(status="外送員已領餐", Gid=Gid)
+    for rec in data:
+        pickup_time = rec.get('pickup_time')
+        if pickup_time:
+            rec['arrive_time'] = (pickup_time + timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S')
+    
+    data_history = guest_get_arrive(status="已完成", Gid=Gid)
 
-@app.route('/restaurants', methods=['GET'])
-def fetch_restaurants():
-    try:
-        restaurants = get_all_restaurants()
-        return jsonify(restaurants), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return render_template('guest_orderlist.html',data=data, data_history=data_history)
 
-@app.route('/cart', methods=['POST'])
-def update_cart():
-    data = request.json
-    try:
-        add_to_cart(
-            dish_name=data['dish_name'], price=data['price'], 
-            restaurant_name=data['restaurant_name'], quantity=data['quantity'], 
-            Gid=data['Gid'], guest_name=data['guest_name']
-        )
-        return jsonify({"message": "Cart updated successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/order', methods=['POST'])
-def submit_order():
-    data = request.json
-    try:
-        response, status = send_dish(data['Gid'])
-        return jsonify({"message": response}), status
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-''''''
-
-
-@app.route("/delivery_list")
+#評分
+@app.route("/rate", methods=['POST'])
 @login_required
-def delivery_list_page():
-    return render_template("delivery_list.html")
+def rate_delivery():
+    order_id = request.form.get('order_id')
+    point = request.form.get('rating')
+
+    if not order_id or not point:
+        return "缺少必要參數", 400
+
+    
+    rate(point, order_id)
+    update_restaurant_points()  # 更新餐廳的平均評分
+    return redirect('/orderlist')
+    
+
+# deliver
 
 # 查看可接訂單 API
 @app.route("/view_orders")
 @login_required
 def view_orders():
-    data = get_pending_orders(status='待接單')
+    data = get_pending_orders(status="待接單")
     return render_template("view_orders.html",data=data)
 
 # 接單 API
-@app.route("/delivery/accept", methods=['POST'])
+@app.route("/delivery/accept", methods=['GET', 'POST'])
 @login_required
 def accept():
-    order_id = request.json.get('Oid')
-    did = session.get('id')  # 外送員 ID
-    if accept_order(order_id, did):
-        return jsonify({"message": "Order accepted."}), 200
-    return jsonify({"message": "Failed to accept order."}), 400
+    Did = session.get('Did')
+    if request.method == 'POST':
+        form = request.form
+        order_id = form['order_id']
+    accept_order(Did, order_id) 
+    return redirect('/delivery_list')
 
-# 查看待送訂單 API
-@app.route("/delivery/pending", methods=['GET'])
-def get_pending_orders_list():
-    try:
-        # 獲取兩種狀態的訂單
-        data = get_pending_orders(status='待接單')
-        return jsonify(pending_orders)
-    except Exception as e:
-        print(f"獲取訂單時發生錯誤: {e}")
-        return jsonify({"error": "無法獲取訂單"}), 500
+#待送訂單
+@app.route("/delivery_list")
+@login_required
+def delivery_list_page():
+    Did = session.get('Did')  
+    if Did is None: 
+        return redirect(url_for('login')) 
+    
+    data_find_delivery = get_pending_orders_byDid(status='已找到外送員', Did=Did)  
+    data_ready_to_send = get_pending_orders_byDid(status='外送員已領餐', Did=Did)
 
+    for rec in data_ready_to_send:
+        pickup_time = rec.get('pickup_time')
+        if pickup_time:
+            rec['arrive_time'] = (pickup_time + timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S')
+
+    return render_template("delivery_list.html", data_find_delivery=data_find_delivery, data_ready_to_send=data_ready_to_send)
 
 # 取貨 API
-@app.route("/delivery/pickup", methods=['POST'])
+@app.route("/delivery/pickup", methods=['GET', 'POST'])
 @login_required
 def pick_up():
-    order_id = request.json.get('Oid')
-    if pick_up_order(order_id):
-        return jsonify({"message": "Order picked up."}), 200
-    return jsonify({"message": "Failed to pick up order."}), 400
+    if request.method == 'POST':
+        form = request.form
+        order_id = form['order_id']
+    pick_up_order(order_id)
+    return redirect('/delivery_list')
 
 # 送達 API
-@app.route("/delivery/complete", methods=['POST'])
+@app.route("/delivery/complete", methods=['GET', 'POST'])
 @login_required
 def complete():
-    order_id = request.form.get('Oid')
-    attachment = request.files.get('attachment')  # 處理附件
-    if complete_order(order_id, attachment):
-        return jsonify({"message": "Order completed."}), 200
-    return jsonify({"message": "Failed to complete order."}), 400
+    if request.method == 'POST':
+        form = request.form
+        order_id = form['order_id']
+    complete_order(order_id)
+    return redirect('/delivery_list')
 
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
