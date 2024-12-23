@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="查看可接訂單，並進行接單操作的管理頁面">
+    <meta name="keywords" content="接單, 訂單管理, 外送平台">
     <title>查看可接訂單</title>
     <style>
         body {
@@ -40,66 +41,86 @@
         <thead>
             <tr>
                 <th>訂單編號</th>
-                <!--<th>餐廳名稱</th>
+                <th>餐廳名稱</th>
                 <th>送達地址</th>
-                <th>金額</th> -->
+                <th>金額</th>
                 <th>操作</th>
             </tr>
         </thead>
         <tbody id="orders-table">
-            <!-- JS 動態填充 -->
+            <!-- JS will dynamically populate rows -->
         </tbody>
     </table>
 
     <script>
+        // 使用 async 函式來獲取待接訂單資料
         async function fetchOrders() {
             try {
                 const response = await fetch('/delivery/orders');
                 if (response.ok) {
-                    const orders = await response.json();
+                    const orders = await response.json();  // 解析 JSON 資料
                     const table = document.getElementById('orders-table');
-                    table.innerHTML = '';
+                    table.innerHTML = '';  // 清空表格
+
                     if (orders.length === 0) {
-                        table.innerHTML = '<tr><td colspan="5">目前沒有可接訂單</td></tr>';
+                        const noDataRow = document.createElement('tr');
+                        noDataRow.innerHTML = `<td colspan="5">目前沒有可接訂單</td>`;
+                        table.appendChild(noDataRow);
                         return;
                     }
+
+                    // 遍歷每個訂單並動態創建表格行
                     orders.forEach(order => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td>${order.order_id}</td>
-                            
+                            <td>${order.restaurant_name}</td>
+                            <td>${order.delivery_address}</td>
+                            <td>${order.amount}</td>
                             <td>
-                                <button onclick="acceptOrder(${order.order_id})">接單</button>
+                                <button id="accept-btn-${order.order_id}" onclick="acceptOrder(${order.order_id})">接單</button>
                             </td>
                         `;
                         table.appendChild(row);
                     });
                 } else {
-                    alert('無法獲取訂單資料');
+                    alert('無法獲取訂單資料，請稍後再試');
                 }
             } catch (error) {
                 console.error('Error fetching orders:', error);
+                alert('獲取訂單資料時出現錯誤，請檢查網路連線');
             }
         }
 
+        // 接單操作
         async function acceptOrder(orderId) {
+            const button = document.getElementById(`accept-btn-${orderId}`);
+            if (button) button.disabled = true;  // 防止重複點擊
+
             try {
                 const response = await fetch('/delivery/accept', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ Oid: orderId })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ Oid: orderId })  // 發送訂單 ID
                 });
+
                 if (response.ok) {
                     alert('接單成功！');
-                    fetchOrders();
+                    fetchOrders();  // 重新獲取待接訂單資料，更新頁面
                 } else {
-                    alert('接單失敗！');
+                    alert('接單失敗，可能該訂單已被其他人接取');
                 }
             } catch (error) {
                 console.error('Error accepting order:', error);
+                alert('接單過程中出現錯誤，請稍後再試');
+            } finally {
+                if (button) button.disabled = false;  // 重新啟用按鈕
             }
         }
 
+        // 頁面加載時自動獲取待接訂單
         fetchOrders();
     </script>
 </body>
