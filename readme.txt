@@ -1,2 +1,3 @@
-pip install mysql-connector
-pip install Flask
+111213014 黃子恩
+111213002 呂恆毅
+111213083 劉姵岑
