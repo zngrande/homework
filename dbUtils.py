@@ -315,9 +315,10 @@ def complete_guest(order_id):
         conn.rollback()
 
 
-#deliver
+# deliver
 
 # 獲取待處理訂單
+# 根據訂單狀態從數據庫中檢索所有符合條件的待處理訂單
 def get_pending_orders(status):
     sql = """
     SELECT orderlist.order_id, 
@@ -339,23 +340,30 @@ def get_pending_orders(status):
              guest.address, 
              guest.name;
     """
+    # 執行 SQL 查詢並傳入狀態參數
     cursor.execute(sql, (status,))
+    # 返回查詢結果
     return cursor.fetchall()
 
-
+# 接單操作
+# 更新訂單的外送員 ID 並將狀態更改為 "已找到外送員"
 def accept_order(Did, order_id):
     try:
-        sql="""
+        sql = """
             UPDATE orderlist
             SET Did = %s, status = '已找到外送員'
             WHERE order_id = %s 
         """
+        # 執行更新操作
         cursor.execute(sql, (Did, order_id))
+        # 提交更改
         conn.commit()
     except mysql.connector.Error as e:
+        # 捕獲錯誤並打印訊息
         print("確認外送員時發生錯誤:", e)
 
-#看待送
+# 獲取外送員待送訂單
+# 根據外送員 ID 和訂單狀態檢索相關的訂單
 def get_pending_orders_byDid(status, Did):
     sql = """
     SELECT orderlist.order_id, 
@@ -378,32 +386,39 @@ def get_pending_orders_byDid(status, Did):
              guest.address, 
              guest.name;
     """
-    cursor.execute(sql, (status,Did))
+    # 執行 SQL 查詢並傳入狀態和外送員 ID 參數
+    cursor.execute(sql, (status, Did))
+    # 返回查詢結果
     return cursor.fetchall()
 
-
-# 取貨
+# 取貨操作
+# 將訂單狀態更新為 "外送員已領餐"，並記錄取餐時間
 def pick_up_order(order_id):
     try:
         cursor.execute(
             "UPDATE orderlist SET status = '外送員已領餐', pickup_time = %s WHERE order_id = %s AND status = '已找到外送員';",
             (datetime.now(), order_id),
         )
+        # 提交更改
         conn.commit()
     except mysql.connector.Error as e:
+        # 捕獲錯誤並打印訊息
         print(f"Error picking up order: {e}")
-        
 
-# 送達
+# 送達操作
+# 將訂單狀態更新為 "已送達"，並記錄送達時間
 def complete_order(order_id):
     try:
         cursor.execute(
             "UPDATE orderlist SET status = '已送達', arrive_time = %s WHERE order_id = %s;",
             (datetime.now(), order_id),
         )
+        # 提交更改
         conn.commit()
     except mysql.connector.Error as e:
-        print(f"Error picking up order: {e}")
+        # 捕獲錯誤並打印訊息
+        print(f"Error completing order: {e}")
+
 
 
 #餐廳    

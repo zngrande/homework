@@ -241,60 +241,84 @@ def rate_delivery():
 # deliver
 
 # 查看可接訂單 API
+# 此路由用於讓外送員查看所有狀態為 "待接單" 的訂單
 @app.route("/view_orders")
 @login_required
 def view_orders():
+    # 從數據庫獲取待接單的訂單資料
     data = get_pending_orders(status="待接單")
-    return render_template("view_orders.html",data=data)
+    # 將訂單資料渲染到 view_orders.html 頁面
+    return render_template("view_orders.html", data=data)
 
 # 接單 API
+# 此路由用於外送員接單操作
 @app.route("/delivery/accept", methods=['GET', 'POST'])
 @login_required
 def accept():
+    # 獲取外送員的 ID
     Did = session.get('Did')
     if request.method == 'POST':
         form = request.form
+        # 從表單中獲取訂單 ID
         order_id = form['order_id']
+    # 將訂單狀態更新為 "已找到外送員"
     accept_order(Did, order_id) 
+    # 接單完成後重定向到待送訂單頁面
     return redirect('/delivery_list')
 
-#待送訂單
+# 待送訂單
+# 此路由用於顯示外送員已接單但尚未完成的訂單
 @app.route("/delivery_list")
 @login_required
 def delivery_list_page():
+    # 獲取外送員的 ID
     Did = session.get('Did')  
     if Did is None: 
+        # 如果未登錄，重定向到登錄頁面
         return redirect(url_for('login')) 
     
+    # 獲取狀態為 "已找到外送員" 的訂單資料
     data_find_delivery = get_pending_orders_byDid(status='已找到外送員', Did=Did)  
+    # 獲取狀態為 "外送員已領餐" 的訂單資料
     data_ready_to_send = get_pending_orders_byDid(status='外送員已領餐', Did=Did)
 
+    # 計算預計送達時間（領餐時間加 30 分鐘）
     for rec in data_ready_to_send:
         pickup_time = rec.get('pickup_time')
         if pickup_time:
             rec['arrive_time'] = (pickup_time + timedelta(minutes=30)).strftime('%Y-%m-%d %H:%M:%S')
 
+    # 渲染 delivery_list.html，顯示待送訂單
     return render_template("delivery_list.html", data_find_delivery=data_find_delivery, data_ready_to_send=data_ready_to_send)
 
 # 取貨 API
+# 此路由用於外送員確認取餐操作
 @app.route("/delivery/pickup", methods=['GET', 'POST'])
 @login_required
 def pick_up():
     if request.method == 'POST':
         form = request.form
+        # 從表單中獲取訂單 ID
         order_id = form['order_id']
+    # 將訂單狀態更新為 "外送員已領餐"
     pick_up_order(order_id)
+    # 完成取餐操作後重定向到待送訂單頁面
     return redirect('/delivery_list')
 
 # 送達 API
+# 此路由用於外送員完成送達訂單的操作
 @app.route("/delivery/complete", methods=['GET', 'POST'])
 @login_required
 def complete():
     if request.method == 'POST':
         form = request.form
+        # 從表單中獲取訂單 ID
         order_id = form['order_id']
+    # 將訂單狀態更新為 "已完成"
     complete_order(order_id)
+    # 完成送達操作後重定向到待送訂單頁面
     return redirect('/delivery_list')
+
 
 #檢查run.bat有沒有連到的東西
 if __name__ == "__main__":
